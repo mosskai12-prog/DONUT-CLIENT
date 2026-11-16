@@ -24,7 +24,6 @@ public final class ModuleConfig {
 
     private static synchronized void load() {
         if (!Files.exists(FILE)) return;
-
         try (Reader reader = Files.newBufferedReader(FILE)) {
             VALUES.load(reader);
         } catch (IOException exception) {
@@ -48,20 +47,27 @@ public final class ModuleConfig {
     }
 
     public static synchronized boolean isEnabled(String name) {
-        return Boolean.parseBoolean(VALUES.getProperty(key(name, "enabled"), "false"));
+        return getBoolean(name, "enabled", false);
     }
 
     public static synchronized boolean isFavorite(String name) {
-        return Boolean.parseBoolean(VALUES.getProperty(key(name, "favorite"), "false"));
+        return getBoolean(name, "favorite", false);
+    }
+
+    public static synchronized boolean getBoolean(String module, String setting, boolean fallback) {
+        return Boolean.parseBoolean(VALUES.getProperty(key(module, setting), Boolean.toString(fallback)));
+    }
+
+    public static synchronized void setBoolean(String module, String setting, boolean value) {
+        VALUES.setProperty(key(module, setting), Boolean.toString(value));
+        save();
     }
 
     public static synchronized void setEnabled(String name, boolean enabled) {
-        VALUES.setProperty(key(name, "enabled"), Boolean.toString(enabled));
-        save();
+        setBoolean(name, "enabled", enabled);
     }
 
     public static synchronized void setFavorite(String name, boolean favorite) {
-        VALUES.setProperty(key(name, "favorite"), Boolean.toString(favorite));
-        save();
+        setBoolean(name, "favorite", favorite);
     }
 }
