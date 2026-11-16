@@ -122,19 +122,19 @@ public class DonutScreen extends Screen {
 
     private void drawModuleRow(GuiGraphics g, Module module, int index, int mouseX, int mouseY) {
         int x = listLeft();
-        int y = contentTop() + index * 49;
+        int y = contentTop() + index * 42;
         int w = listWidth();
-        boolean hover = mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + 43;
+        boolean hover = mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + 37;
         boolean active = module == selected;
-        pill(g, x, y, w, 43, active ? 0xFF302129 : hover ? CARD_HOVER : CARD);
-        pill(g, x, y, 3, 43, active ? RED : 0xFF343B47);
-        pill(g, x + 14, y + 12, 19, 19, active ? 0xFF63303A : 0xFF303744);
-        text(g, module.getName().substring(0, 1), x + 20, y + 18, active ? WHITE : MUTED);
-        text(g, module.getName(), x + 43, y + 9, WHITE);
-        text(g, module.getCategory().toUpperCase(), x + 43, y + 25, MUTED);
-        text(g, module.isFavorite() ? "★" : "☆", x + w - 78, y + 14,
+        pill(g, x, y, w, 37, active ? 0xFF302129 : hover ? CARD_HOVER : CARD);
+        pill(g, x, y, 3, 37, active ? RED : 0xFF343B47);
+        pill(g, x + 14, y + 9, 19, 19, active ? 0xFF63303A : 0xFF303744);
+        text(g, module.getName().substring(0, 1), x + 20, y + 15, active ? WHITE : MUTED);
+        text(g, module.getName(), x + 43, y + 6, WHITE);
+        text(g, module.getCategory().toUpperCase(), x + 43, y + 21, MUTED);
+        text(g, module.isFavorite() ? "★" : "☆", x + w - 78, y + 11,
                 module.isFavorite() ? RED : MUTED);
-        drawSwitch(g, x + w - 51, y + 12, module.isEnabled(), "module." + module.getName());
+        drawSwitch(g, x + w - 51, y + 9, module.isEnabled(), "module." + module.getName());
     }
 
     private void drawSettings(GuiGraphics g, int mouseX, int mouseY) {
@@ -233,7 +233,7 @@ public class DonutScreen extends Screen {
         text(g, "CONFIGURATION", detailsLeft(), headY + 42, MUTED);
 
         List<Module> list = visibleModules();
-        int maxRows = Math.max(1, (h - 205) / 49);
+        int maxRows = Math.max(1, (h - 180) / 42);
         for (int i = 0; i < Math.min(list.size(), maxRows); i++) {
             drawModuleRow(g, list.get(i), i, mouseX, mouseY);
         }
@@ -272,13 +272,13 @@ public class DonutScreen extends Screen {
         }
 
         List<Module> list = visibleModules();
-        int maxRows = Math.max(1, (panelHeight() - 205) / 49);
+        int maxRows = Math.max(1, (panelHeight() - 180) / 42);
         for (int i = 0; i < Math.min(list.size(), maxRows); i++) {
             Module module = list.get(i);
             int rowX = listLeft();
-            int rowY = contentTop() + i * 49;
+            int rowY = contentTop() + i * 42;
             int rowW = listWidth();
-            if (mx >= rowX && mx <= rowX + rowW && my >= rowY && my <= rowY + 43) {
+            if (mx >= rowX && mx <= rowX + rowW && my >= rowY && my <= rowY + 37) {
                 if (mx >= rowX + rowW - 82 && mx < rowX + rowW - 56) {
                     module.toggleFavorite();
                 } else if (mx >= rowX + rowW - 53) {
