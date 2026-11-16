@@ -1,0 +1,24 @@
+
+{
+  "schemaVersion": 1,
+  "id": "donutclient",
+  "version": "${version}",
+  "name": "DONUT CLIENT",
+  "description": "A custom Minecraft client with a modular interface.",
+  "authors": [
+    "DONUT CLIENT"
+  ],
+  "license": "All-Rights-Reserved",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.donutclient.DonutClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
