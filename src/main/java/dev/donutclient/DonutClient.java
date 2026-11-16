@@ -9,34 +9,26 @@ import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class DonutClient implements ClientModInitializer {
-
-    private static final KeyMapping.Category CATEGORY =
-            KeyMapping.Category.register(
-                    Identifier.fromNamespaceAndPath("donutclient", "main")
-            );
-
+    private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
+            Identifier.fromNamespaceAndPath("donutclient", "main")
+    );
     private static KeyMapping openMenuKey;
 
     @Override
     public void onInitializeClient() {
-        openMenuKey = KeyBindingHelper.registerKeyBinding(
-                new KeyMapping(
-                        "key.donutclient.open_menu",
-                        InputConstants.Type.KEYSYM,
-                        GLFW.GLFW_KEY_RIGHT_SHIFT,
-                        CATEGORY
-                )
-        );
+        openMenuKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+                "key.donutclient.open_menu",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_RIGHT_SHIFT,
+                CATEGORY
+        ));
+
+        ModuleFeatures.registerHud();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ModuleFeatures.tick(client);
-
             while (openMenuKey.consumeClick()) {
-                if (client.screen instanceof DonutScreen) {
-                    client.setScreen(null);
-                } else {
-                    client.setScreen(new DonutScreen());
-                }
+                client.setScreen(client.screen instanceof DonutScreen ? null : new DonutScreen());
             }
         });
     }
