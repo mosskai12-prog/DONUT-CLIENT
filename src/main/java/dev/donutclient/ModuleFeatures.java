@@ -16,16 +16,18 @@ public final class ModuleFeatures {
             return;
         }
 
-        boolean fullbrightEnabled = ModuleConfig.isEnabled("Fullbright");
+        boolean enabled = ModuleConfig.isEnabled("Fullbright");
 
-        if (fullbrightEnabled && !fullbrightActive) {
+        if (enabled && !fullbrightActive) {
             previousGamma = client.options.gamma().get();
             fullbrightActive = true;
         }
 
-        if (fullbrightEnabled) {
-            // Raise the vanilla brightness setting while this module is enabled.
-            client.options.gamma().set(1.0);
+        if (enabled) {
+            double targetGamma = ModuleConfig.getBoolean(
+                    "Fullbright", "maximum_brightness", true
+            ) ? 1.0 : 0.8;
+            client.options.gamma().set(targetGamma);
         } else {
             restoreGamma(client);
         }
@@ -33,7 +35,12 @@ public final class ModuleFeatures {
 
     private static void restoreGamma(Minecraft client) {
         if (fullbrightActive) {
-            client.options.gamma().set(previousGamma);
+            boolean shouldRestore = ModuleConfig.getBoolean(
+                    "Fullbright", "restore_brightness_on_disable", true
+            );
+            if (shouldRestore) {
+                client.options.gamma().set(previousGamma);
+            }
             fullbrightActive = false;
         }
     }
