@@ -13,8 +13,8 @@ public class Module {
         this.name = name;
         this.category = category;
         this.description = description;
-        this.enabled = false;
-        this.favorite = false;
+        this.enabled = ModuleConfig.isEnabled(name);
+        this.favorite = ModuleConfig.isFavorite(name);
     }
 
     public String getName() {
@@ -35,6 +35,7 @@ public class Module {
 
     public void toggle() {
         enabled = !enabled;
+        ModuleConfig.setEnabled(name, enabled);
     }
 
     public boolean isFavorite() {
@@ -43,5 +44,6 @@ public class Module {
 
     public void toggleFavorite() {
         favorite = !favorite;
+        ModuleConfig.setFavorite(name, favorite);
     }
 }
