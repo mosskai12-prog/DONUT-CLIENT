@@ -29,6 +29,8 @@ public class DonutClient implements ClientModInitializer {
         );
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            ModuleFeatures.tick(client);
+
             while (openMenuKey.consumeClick()) {
                 if (client.screen instanceof DonutScreen) {
                     client.setScreen(null);
