@@ -60,8 +60,8 @@ public class DonutScreen extends Screen {
         return switch (module.getName()) {
             case "Fullbright" -> new String[]{"Maximum brightness", "Restore brightness on disable"};
             case "Toggle Sprint" -> new String[]{"Require forward movement", "Stop while sneaking"};
-            case "Coordinates HUD" -> new String[]{"Show coordinates"};
-            case "FPS Counter" -> new String[]{"Show FPS"};
+            case "Coordinates HUD" -> new String[0];
+            case "FPS Counter" -> new String[0];
             default -> new String[0];
         };
     }
