@@ -4,236 +4,319 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DonutScreen extends Screen {
     private final List<Module> modules = new ArrayList<>();
+    private final Map<String, Float> animations = new HashMap<>();
     private String category = "All";
     private Module selected;
-    private float openProgress;
-    private final Map<String, Float> toggleProgress = new HashMap<>();
+    private float open = 0.0f;
 
-    private static final int BG = 0xFF101115, HEADER = 0xFF17191F;
-    private static final int SIDE = 0xFF14161B, PANEL = 0xFF191C23;
-    private static final int CARD = 0xFF20242D, HOVER = 0xFF292E39;
-    private static final int LINE = 0xFF303541, WHITE = 0xFFF5F6F8;
-    private static final int MUTED = 0xFF929AA8, RED = 0xFFE65361;
-    private static final int GREEN = 0xFF6ED39A;
-    private static final String[] CATEGORIES = {"All","Combat","Movement","Render","World","Player","HUD","Favorites"};
+    private static final int BG = 0xFF0B0D11;
+    private static final int PANEL = 0xFF12151B;
+    private static final int PANEL_ALT = 0xFF171B23;
+    private static final int CARD = 0xFF1B2029;
+    private static final int CARD_HOVER = 0xFF252B36;
+    private static final int BORDER = 0xFF2A303B;
+    private static final int WHITE = 0xFFF2F4F7;
+    private static final int MUTED = 0xFF8993A2;
+    private static final int RED = 0xFFE34B5B;
+    private static final int GREEN = 0xFF63D69A;
+    private static final String[] CATEGORIES = {
+            "All", "Combat", "Movement", "Render", "World", "Player", "HUD", "Favorites"
+    };
 
     public DonutScreen() {
         super(Component.literal("DONUT CLIENT"));
-        modules.add(new Module("Base Finder","World","Finds configured bases."));
-        modules.add(new Module("Fullbright","Render","Brightens dark areas."));
-        modules.add(new Module("Fly","Movement","Flight movement module."));
-        modules.add(new Module("Progress Bar","HUD","Displays a progress bar."));
-        modules.add(new Module("Name Hider","Render","Hides selected names."));
-        modules.add(new Module("Hotbar","HUD","Custom hotbar display."));
-        modules.add(new Module("Amethyst Scanner","World","Scans amethyst blocks."));
-        modules.add(new Module("Light Debug","Render","Displays light information."));
-        modules.add(new Module("Sound Detector","World","Detects nearby sounds."));
-        modules.add(new Module("BlockESP","Render","Highlights selected ores."));
-        modules.add(new Module("StorageESP","Render","Highlights nearby storage blocks."));
+        modules.add(new Module("Base Finder", "World", "Finds configured bases."));
+        modules.add(new Module("Fullbright", "Render", "Brightens dark areas."));
+        modules.add(new Module("Fly", "Movement", "Flight movement module."));
+        modules.add(new Module("Progress Bar", "HUD", "Displays a progress bar."));
+        modules.add(new Module("Name Hider", "Render", "Hides selected names."));
+        modules.add(new Module("Hotbar", "HUD", "Custom hotbar display."));
+        modules.add(new Module("Amethyst Scanner", "World", "Scans amethyst blocks."));
+        modules.add(new Module("Light Debug", "Render", "Displays light information."));
+        modules.add(new Module("Sound Detector", "World", "Detects nearby sounds."));
+        modules.add(new Module("BlockESP", "Render", "Highlights selected ores."));
+        modules.add(new Module("StorageESP", "Render", "Highlights nearby storage blocks."));
     }
 
-    @Override public boolean isPauseScreen() { return false; }
-    private int pw() { return Math.min(1040, width - 24); }
-    private int ph() { return Math.min(610, height - 24); }
-    private int px() { return (width - pw()) / 2; }
-    private int py() { return (height - ph()) / 2; }
-    private int sw() { return 166; }
-    private int rw() { return 258; }
-    private int cx() { return px() + sw() + 22; }
-    private int cw() { return pw() - sw() - rw() - 58; }
-    private int rx() { return px() + pw() - rw(); }
-    private int cardW() { return (cw() - 14) / 2; }
-
-    private List<Module> visible() {
-        return modules.stream().filter(m -> category.equals("All")
-                || (category.equals("Favorites") && m.isFavorite())
-                || m.getCategory().equals(category)).toList();
+    @Override
+    public boolean isPauseScreen() {
+        return false;
     }
 
-    private String[] options(Module m) {
-        return switch (m.getName()) {
-            case "Fullbright" -> new String[]{"Maximum brightness","Restore brightness on disable"};
-            case "Base Finder" -> new String[]{"Show distance","Show coordinates"};
-            case "Fly" -> new String[]{"Disable when grounded","Show flight indicator"};
-            case "Progress Bar" -> new String[]{"Show percentage","Compact display"};
-            case "Name Hider" -> new String[]{"Hide player names","Hide mob names"};
-            case "Hotbar" -> new String[]{"Show item counts","Compact layout"};
-            case "Amethyst Scanner" -> new String[]{"Show cluster markers","Show distance"};
-            case "Light Debug" -> new String[]{"Show block light","Show sky light"};
-            case "Sound Detector" -> new String[]{"Show direction","Show distance"};
+    private int panelWidth() { return Math.min(1080, width - 28); }
+    private int panelHeight() { return Math.min(660, height - 28); }
+    private int left() { return (width - panelWidth()) / 2; }
+    private int top() { return (height - panelHeight()) / 2; }
+    private int navHeight() { return 66; }
+    private int contentTop() { return top() + 126; }
+    private int listLeft() { return left() + 26; }
+    private int listWidth() { return Math.max(250, (panelWidth() - 390) / 2); }
+    private int detailsLeft() { return listLeft() + listWidth() + 18; }
+    private int detailsWidth() { return left() + panelWidth() - 26 - detailsLeft(); }
+
+    private List<Module> visibleModules() {
+        return modules.stream().filter(m ->
+                category.equals("All")
+                        || (category.equals("Favorites") && m.isFavorite())
+                        || m.getCategory().equals(category)
+        ).toList();
+    }
+
+    private String[] options(Module module) {
+        return switch (module.getName()) {
+            case "Fullbright" -> new String[]{"Maximum brightness", "Restore brightness on disable"};
+            case "Base Finder" -> new String[]{"Show distance", "Show coordinates"};
+            case "Fly" -> new String[]{"Disable when grounded", "Show flight indicator"};
+            case "Progress Bar" -> new String[]{"Show percentage", "Compact display"};
+            case "Name Hider" -> new String[]{"Hide player names", "Hide mob names"};
+            case "Hotbar" -> new String[]{"Show item counts", "Compact layout"};
+            case "Amethyst Scanner" -> new String[]{"Show cluster markers", "Show distance"};
+            case "Light Debug" -> new String[]{"Show block light", "Show sky light"};
+            case "Sound Detector" -> new String[]{"Show direction", "Show distance"};
             case "BlockESP" -> new String[]{
-                    "Diamond Ore","Deepslate Diamond Ore","Ancient Debris",
-                    "Emerald Ore","Gold Ore","Iron Ore","Copper Ore",
-                    "Redstone Ore","Lapis Lazuli Ore","Coal Ore"
+                    "Diamond Ore", "Deepslate Diamond Ore", "Ancient Debris", "Emerald Ore",
+                    "Gold Ore", "Iron Ore", "Copper Ore", "Redstone Ore", "Lapis Lazuli Ore", "Coal Ore"
             };
             case "StorageESP" -> new String[]{
-                    "Chests","Trapped Chests","Ender Chests","Barrels","Shulker Boxes"
+                    "Chests", "Trapped Chests", "Ender Chests", "Barrels", "Shulker Boxes"
             };
-            default -> new String[]{"Show module indicator","Enable notifications"};
+            default -> new String[]{"Show module indicator", "Enable notifications"};
         };
     }
 
-    private String key(String s) { return s.toLowerCase().replaceAll("[^a-z0-9]+","_"); }
-    private void txt(GuiGraphics g,String s,int x,int y,int color) { g.drawString(font,s,x,y,color,false); }
-    private void toggle(GuiGraphics g,int x,int y,boolean on,String id) {
-        float target = on ? 1.0f : 0.0f;
-        float amount = toggleProgress.compute(id, (k,v) -> v == null ? target : v + (target-v)*0.28f);
-        int track = blend(0xFF424955,0xFF326B50,amount);
-        int knobX = x + 2 + Math.round(14 * amount);
-        g.fill(x,y,x+30,y+16,track);
-        g.fill(knobX,y+2,knobX+12,y+14,WHITE);
+    private String settingKey(String value) {
+        return value.toLowerCase().replaceAll("[^a-z0-9]+", "_");
     }
-    private int blend(int a,int b,float t) {
-        int r=(int)(((a>>16)&255)*(1-t)+((b>>16)&255)*t);
-        int gr=(int)(((a>>8)&255)*(1-t)+((b>>8)&255)*t);
-        int bl=(int)((a&255)*(1-t)+(b&255)*t);
-        return 0xFF000000|(r<<16)|(gr<<8)|bl;
+
+    private void text(GuiGraphics g, String value, int x, int y, int color) {
+        g.drawString(font, value, x, y, color, false);
+    }
+
+    private void pill(GuiGraphics g, int x, int y, int w, int h, int color) {
+        g.fill(x, y, x + w, y + h, color);
+    }
+
+    private int mix(int a, int b, float amount) {
+        int r = (int) (((a >> 16) & 255) * (1 - amount) + ((b >> 16) & 255) * amount);
+        int gr = (int) (((a >> 8) & 255) * (1 - amount) + ((b >> 8) & 255) * amount);
+        int bl = (int) ((a & 255) * (1 - amount) + (b & 255) * amount);
+        return 0xFF000000 | (r << 16) | (gr << 8) | bl;
+    }
+
+    private void drawSwitch(GuiGraphics g, int x, int y, boolean enabled, String id) {
+        float target = enabled ? 1.0f : 0.0f;
+        float value = animations.compute(id, (k, old) ->
+                old == null ? target : old + (target - old) * 0.32f);
+        pill(g, x, y, 34, 18, mix(0xFF343B47, 0xFF286747, value));
+        int knob = x + 2 + Math.round(16 * value);
+        pill(g, knob, y + 2, 14, 14, WHITE);
+    }
+
+    private void drawModuleRow(GuiGraphics g, Module module, int index, int mouseX, int mouseY) {
+        int x = listLeft();
+        int y = contentTop() + index * 49;
+        int w = listWidth();
+        boolean hover = mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + 43;
+        boolean active = module == selected;
+        pill(g, x, y, w, 43, active ? 0xFF302129 : hover ? CARD_HOVER : CARD);
+        pill(g, x, y, 3, 43, active ? RED : 0xFF343B47);
+        pill(g, x + 14, y + 12, 19, 19, active ? 0xFF63303A : 0xFF303744);
+        text(g, module.getName().substring(0, 1), x + 20, y + 18, active ? WHITE : MUTED);
+        text(g, module.getName(), x + 43, y + 9, WHITE);
+        text(g, module.getCategory().toUpperCase(), x + 43, y + 25, MUTED);
+        text(g, module.isFavorite() ? "★" : "☆", x + w - 78, y + 14,
+                module.isFavorite() ? RED : MUTED);
+        drawSwitch(g, x + w - 51, y + 12, module.isEnabled(), "module." + module.getName());
+    }
+
+    private void drawSettings(GuiGraphics g, int mouseX, int mouseY) {
+        int x = detailsLeft();
+        int y = contentTop();
+        int w = detailsWidth();
+        int h = panelHeight() - 156;
+        pill(g, x, y, w, h, PANEL);
+        pill(g, x, y, w, 1, BORDER);
+
+        if (selected == null) {
+            text(g, "MODULE DETAILS", x + 20, y + 24, RED);
+            text(g, "Choose a module", x + 20, y + 64, WHITE);
+            text(g, "Select something from the list", x + 20, y + 86, MUTED);
+            text(g, "to see its controls and settings.", x + 20, y + 101, MUTED);
+            pill(g, x + 20, y + 132, w - 40, 1, BORDER);
+            text(g, "YOUR CLIENT", x + 20, y + 154, MUTED);
+            long enabled = modules.stream().filter(Module::isEnabled).count();
+            text(g, enabled + " modules currently enabled", x + 20, y + 177, WHITE);
+            return;
+        }
+
+        text(g, "MODULE SETTINGS", x + 20, y + 23, RED);
+        text(g, selected.getName(), x + 20, y + 52, WHITE);
+        text(g, selected.getDescription(), x + 20, y + 71, MUTED);
+
+        int toggleY = y + 96;
+        pill(g, x + 16, toggleY, w - 32, 42, PANEL_ALT);
+        text(g, "Module enabled", x + 29, toggleY + 16, WHITE);
+        drawSwitch(g, x + w - 66, toggleY + 12, selected.isEnabled(), "settings.enabled");
+
+        text(g, "OPTIONS", x + 20, y + 164, MUTED);
+        String[] settings = options(selected);
+        int rowY = y + 180;
+        int rowHeight = settings.length > 6 ? 29 : 42;
+        for (int i = 0; i < settings.length; i++) {
+            int yy = rowY + i * (rowHeight + 5);
+            if (yy + rowHeight > y + h - 30) break;
+            boolean value = ModuleConfig.getBoolean(selected.getName(), settingKey(settings[i]), true);
+            pill(g, x + 16, yy, w - 32, rowHeight, PANEL_ALT);
+            text(g, settings[i], x + 28, yy + (rowHeight - 9) / 2, WHITE);
+            drawSwitch(g, x + w - 66, yy + (rowHeight - 18) / 2, value,
+                    "setting." + selected.getName() + "." + settingKey(settings[i]));
+        }
+        text(g, "Changes save automatically", x + 20, y + h - 18, MUTED);
     }
 
     @Override
-    public void render(GuiGraphics g,int mouseX,int mouseY,float delta) {
-        openProgress = Math.min(1.0f, openProgress + delta * 4.5f);
-        int slide = Math.round((1.0f-openProgress)*18.0f);
-        g.fill(0,0,width,height,0xC9000000);
-        int x=px(), y=py()+slide, w=pw(), bottom=y+ph();
-        int sideY=y+72, top=y+96, rightX=rx(), rightY=y+72, contentX=cx();
-        g.fill(x,y,x+w,bottom,BG);
-        g.fill(x,y,x+w,y+72,HEADER);
-        g.fill(x,y,x+4,bottom,RED);
-        g.fill(x,y+71,x+w,y+73,LINE);
+    public void render(GuiGraphics g, int mouseX, int mouseY, float delta) {
+        open = Math.min(1.0f, open + delta * 4.0f);
+        int offset = Math.round((1.0f - open) * 15.0f);
+        int x = left();
+        int y = top() + offset;
+        int w = panelWidth();
+        int h = panelHeight();
+        int bottom = y + h;
 
-        // Logo and top status
-        g.fill(x+20,y+17,x+54,y+51,RED);
-        txt(g,"D",x+31,y+27,WHITE);
-        txt(g,"DONUT CLIENT",x+66,y+19,WHITE);
-        txt(g,"MINECRAFT UTILITY",x+66,y+39,MUTED);
-        long active=modules.stream().filter(Module::isEnabled).count();
-        g.fill(x+w-176,y+20,x+w-18,y+51,CARD);
-        g.fill(x+w-165,y+31,x+w-159,y+37,GREEN);
-        txt(g,active+" MODULES ACTIVE",x+w-151,y+31,WHITE);
+        g.fill(0, 0, width, height, 0xD9000000);
+        pill(g, x, y, w, h, BG);
 
-        // Sidebar navigation
-        g.fill(x,sideY,x+sw(),bottom-34,SIDE);
-        txt(g,"WORKSPACE",x+19,sideY+22,MUTED);
-        for(int i=0;i<CATEGORIES.length;i++) {
-            int cy=sideY+42+i*39;
-            boolean chosen=category.equals(CATEGORIES[i]);
-            boolean hover=mouseX>=x+10 && mouseX<=x+sw()-10 && mouseY>=cy-8 && mouseY<=cy+23;
-            if(chosen) {
-                g.fill(x+10,cy-8,x+sw()-10,cy+23,0xFF34232A);
-                g.fill(x+10,cy-8,x+13,cy+23,RED);
-            } else if(hover) g.fill(x+10,cy-8,x+sw()-10,cy+23,CARD);
-            txt(g,CATEGORIES[i],x+24,cy+3,chosen?WHITE:MUTED);
+        // Header: brand, status and close hint.
+        pill(g, x, y, w, navHeight(), PANEL);
+        pill(g, x, y, 4, navHeight(), RED);
+        pill(g, x + 22, y + 16, 34, 34, RED);
+        text(g, "D", x + 34, y + 27, WHITE);
+        text(g, "DONUT", x + 68, y + 17, WHITE);
+        text(g, "CLIENT  /  UNIVERSAL", x + 68, y + 36, MUTED);
+        long active = modules.stream().filter(Module::isEnabled).count();
+        pill(g, x + w - 190, y + 19, 104, 28, PANEL_ALT);
+        pill(g, x + w - 178, y + 30, 6, 6, GREEN);
+        text(g, active + " ACTIVE", x + w - 164, y + 29, WHITE);
+        text(g, "RIGHT SHIFT  ×", x + w - 76, y + 29, MUTED);
+        pill(g, x, y + navHeight(), w, 1, BORDER);
+
+        // Horizontal category navigation replaces the old crowded sidebar.
+        int tabX = x + 24;
+        int tabY = y + 83;
+        text(g, "BROWSE", tabX, y + 74, MUTED);
+        for (String item : CATEGORIES) {
+            int tabW = Math.max(47, font.width(item) + 20);
+            boolean chosen = category.equals(item);
+            boolean hover = mouseX >= tabX && mouseX <= tabX + tabW
+                    && mouseY >= tabY && mouseY <= tabY + 27;
+            pill(g, tabX, tabY, tabW, 27,
+                    chosen ? 0xFF482630 : hover ? CARD_HOVER : PANEL);
+            if (chosen) pill(g, tabX, tabY + 25, tabW, 2, RED);
+            text(g, item, tabX + 10, tabY + 9, chosen ? WHITE : MUTED);
+            tabX += tabW + 7;
         }
 
-        // Module cards
-        txt(g,"MODULES",contentX,top,RED);
-        txt(g,category,contentX,top+20,WHITE);
-        txt(g,"Manage your client features",contentX,top+39,MUTED);
-        List<Module> list=visible();
-        int cardTop=top+62, cardW=cardW(), cardH=76;
-        for(int i=0;i<list.size();i++) {
-            Module m=list.get(i);
-            int col=i%2,row=i/2,bx=contentX+col*(cardW+14),by=cardTop+row*88;
-            boolean chosen=selected==m;
-            boolean hover=mouseX>=bx && mouseX<=bx+cardW && mouseY>=by && mouseY<=by+cardH;
-            g.fill(bx,by,bx+cardW,by+cardH,chosen?0xFF30232A:hover?HOVER:CARD);
-            g.fill(bx,by,bx+cardW,by+1,chosen?RED:LINE);
-            g.fill(bx,by,bx+3,by+cardH,chosen?RED:0xFF343A45);
-            txt(g,m.getName(),bx+14,by+15,WHITE);
-            txt(g,m.getDescription(),bx+14,by+36,MUTED);
-            txt(g,m.getCategory().toUpperCase(),bx+14,by+57,0xFF737D8B);
-            txt(g,m.isFavorite()?"★":"☆",bx+cardW-78,by+15,m.isFavorite()?RED:MUTED);
-            toggle(g,bx+cardW-48,by+48,m.isEnabled(),"module."+m.getName());
-        }
+        // Main workspace.
+        int headY = y + 121;
+        text(g, "MODULE LIBRARY", x + 26, headY, WHITE);
+        text(g, "Pick a feature, then configure it on the right.", x + 26, headY + 17, MUTED);
+        text(g, "FEATURE", listLeft(), headY + 42, MUTED);
+        text(g, "CONFIGURATION", detailsLeft(), headY + 42, MUTED);
 
-        // Settings panel
-        g.fill(rightX,rightY,x+w,bottom-34,PANEL);
-        g.fill(rightX,rightY,rightX+1,bottom-34,LINE);
-        txt(g,"CONFIGURATION",rightX+18,rightY+23,RED);
-        if(selected==null) {
-            g.fill(rightX+16,rightY+53,x+w-16,rightY+142,CARD);
-            txt(g,"SELECT A MODULE",rightX+29,rightY+72,WHITE);
-            txt(g,"Choose any module card",rightX+29,rightY+94,MUTED);
-            txt(g,"to see its settings here.",rightX+29,rightY+109,MUTED);
-        } else {
-            txt(g,selected.getName(),rightX+18,rightY+57,WHITE);
-            txt(g,selected.getDescription(),rightX+18,rightY+77,MUTED);
-            int enableY=rightY+98;
-            g.fill(rightX+16,enableY,x+w-16,enableY+39,CARD);
-            txt(g,"Enabled",rightX+28,enableY+15,WHITE);
-            toggle(g,x+w-61,enableY+11,selected.isEnabled(),"selected."+selected.getName());
-            txt(g,"MODULE OPTIONS",rightX+18,rightY+160,MUTED);
-            String[] opts=options(selected);
-            boolean compactOptions = selected.getName().equals("BlockESP") || selected.getName().equals("StorageESP");
-            for(int i=0;i<opts.length;i++) {
-                int oy=rightY+(compactOptions ? 142 : 176)+i*(compactOptions ? 27 : 49);
-                boolean value=ModuleConfig.getBoolean(selected.getName(),key(opts[i]),true);
-                int rowHeight = compactOptions ? 23 : 39;
-                g.fill(rightX+16,oy,x+w-16,oy+rowHeight,CARD);
-                txt(g,opts[i],rightX+28,oy+(compactOptions ? 8 : 15),WHITE);
-                toggle(g,x+w-61,oy+(compactOptions ? 4 : 11),value,"setting."+selected.getName()+"."+key(opts[i]));
+        List<Module> list = visibleModules();
+        int maxRows = Math.max(1, (h - 205) / 49);
+        for (int i = 0; i < Math.min(list.size(), maxRows); i++) {
+            drawModuleRow(g, list.get(i), i, mouseX, mouseY);
+        }
+        if (list.isEmpty()) {
+            text(g, "No favourites yet", listLeft() + 16, contentTop() + 18, MUTED);
+        }
+        drawSettings(g, mouseX, mouseY);
+
+        // Bottom utility strip.
+        pill(g, x, bottom - 35, w, 35, PANEL);
+        pill(g, x, bottom - 36, w, 1, BORDER);
+        text(g, "DONUT CLIENT", x + 22, bottom - 22, MUTED);
+        text(g, "11 MODULES", x + w - 100, bottom - 22, MUTED);
+        super.render(g, mouseX, mouseY, delta);
+    }
+
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (event.button() != 0) return super.mouseClicked(event, doubleClick);
+
+        double mx = event.x();
+        double my = event.y();
+        int x = left();
+        int y = top();
+        int tabX = x + 24;
+        int tabY = y + 83;
+
+        for (String item : CATEGORIES) {
+            int tabW = Math.max(47, font.width(item) + 20);
+            if (mx >= tabX && mx <= tabX + tabW && my >= tabY && my <= tabY + 27) {
+                category = item;
+                selected = null;
+                return true;
             }
-            txt(g,"Settings save automatically",rightX+18,bottom-57,MUTED);
+            tabX += tabW + 7;
         }
 
-        // Footer
-        g.fill(x,bottom-34,x+w,bottom,HEADER);
-        g.fill(x,bottom-35,x+w,bottom-34,LINE);
-        txt(g,"DONUT CLIENT  /  RIGHT SHIFT TO CLOSE",x+18,bottom-21,MUTED);
-        txt(g,"1.0.0",x+w-49,bottom-21,MUTED);
-        super.render(g,mouseX,mouseY,delta);
-    }
-
-    @Override
-    public boolean mouseClicked(MouseButtonEvent event,boolean doubleClick) {
-        double mx=event.x(),my=event.y();
-        if(event.button()==0) {
-            int x=px(),y=py(),w=pw(),sideY=y+72;
-            for(int i=0;i<CATEGORIES.length;i++) {
-                int cy=sideY+42+i*39;
-                if(mx>=x && mx<=x+sw() && my>=cy-8 && my<=cy+23) {
-                    category=CATEGORIES[i]; selected=null; return true;
+        List<Module> list = visibleModules();
+        int maxRows = Math.max(1, (panelHeight() - 205) / 49);
+        for (int i = 0; i < Math.min(list.size(), maxRows); i++) {
+            Module module = list.get(i);
+            int rowX = listLeft();
+            int rowY = contentTop() + i * 49;
+            int rowW = listWidth();
+            if (mx >= rowX && mx <= rowX + rowW && my >= rowY && my <= rowY + 43) {
+                if (mx >= rowX + rowW - 82 && mx < rowX + rowW - 56) {
+                    module.toggleFavorite();
+                } else if (mx >= rowX + rowW - 53) {
+                    module.toggle();
+                } else {
+                    selected = module;
                 }
+                return true;
             }
-            int contentX=cx(),top=y+96,cardTop=top+62,cardW=cardW();
-            List<Module> list=visible();
-            for(int i=0;i<list.size();i++) {
-                Module m=list.get(i);
-                int col=i%2,row=i/2,bx=contentX+col*(cardW+14),by=cardTop+row*88;
-                if(mx>=bx && mx<=bx+cardW && my>=by && my<=by+76) {
-                    if(mx>=bx+cardW-84 && mx<bx+cardW-52) m.toggleFavorite();
-                    else if(mx>=bx+cardW-50 && my>=by+43) m.toggle();
-                    else selected=m;
+        }
+
+        if (selected != null) {
+            int x2 = detailsLeft();
+            int y2 = contentTop();
+            int w2 = detailsWidth();
+            int h2 = panelHeight() - 156;
+            int toggleY = y2 + 96;
+            if (mx >= x2 + 16 && mx <= x2 + w2 - 16
+                    && my >= toggleY && my <= toggleY + 42) {
+                selected.toggle();
+                return true;
+            }
+
+            String[] settings = options(selected);
+            int rowHeight = settings.length > 6 ? 29 : 42;
+            int rowY = y2 + 180;
+            for (int i = 0; i < settings.length; i++) {
+                int yy = rowY + i * (rowHeight + 5);
+                if (yy + rowHeight > y2 + h2 - 30) break;
+                if (mx >= x2 + 16 && mx <= x2 + w2 - 16
+                        && my >= yy && my <= yy + rowHeight) {
+                    String setting = settingKey(settings[i]);
+                    boolean value = ModuleConfig.getBoolean(selected.getName(), setting, true);
+                    ModuleConfig.setBoolean(selected.getName(), setting, !value);
                     return true;
                 }
             }
-            if(selected!=null) {
-                int rightX=rx(),rightY=y+72,enableY=rightY+98;
-                if(mx>=rightX+16 && mx<=x+w-16 && my>=enableY && my<=enableY+39) {
-                    selected.toggle(); return true;
-                }
-                String[] opts=options(selected);
-                boolean compactOptions = selected.getName().equals("BlockESP") || selected.getName().equals("StorageESP");
-                for(int i=0;i<opts.length;i++) {
-                    int oy=rightY+(compactOptions ? 142 : 176)+i*(compactOptions ? 27 : 49);
-                    int rowHeight = compactOptions ? 23 : 39;
-                    if(mx>=rightX+16 && mx<=x+w-16 && my>=oy && my<=oy+rowHeight) {
-                        String setting=key(opts[i]);
-                        boolean value=ModuleConfig.getBoolean(selected.getName(),setting,true);
-                        ModuleConfig.setBoolean(selected.getName(),setting,!value);
-                        return true;
-                    }
-                }
-            }
         }
-        return super.mouseClicked(event,doubleClick);
+        return super.mouseClicked(event, doubleClick);
     }
 }
