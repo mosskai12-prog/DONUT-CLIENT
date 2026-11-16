@@ -12,7 +12,7 @@ public final class ModuleFeatures {
 
     public static void tick(Minecraft client) {
         if (client.player == null || client.level == null) {
-            fullbrightActive = false;
+            restoreGamma(client);
             return;
         }
 
@@ -24,8 +24,15 @@ public final class ModuleFeatures {
         }
 
         if (fullbrightEnabled) {
+            // Raise the vanilla brightness setting while this module is enabled.
             client.options.gamma().set(1.0);
-        } else if (fullbrightActive) {
+        } else {
+            restoreGamma(client);
+        }
+    }
+
+    private static void restoreGamma(Minecraft client) {
+        if (fullbrightActive) {
             client.options.gamma().set(previousGamma);
             fullbrightActive = false;
         }
