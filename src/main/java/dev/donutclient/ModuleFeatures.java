@@ -5,9 +5,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.gizmos.Gizmos;
+import net.minecraft.gizmos.GizmoStyle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +46,7 @@ public final class ModuleFeatures {
             scanCooldown = 10;
             scanEspBlocks(client);
         }
+        submitEsp();
     }
 
     private static void scanEspBlocks(Minecraft client) {
@@ -75,7 +76,7 @@ public final class ModuleFeatures {
     }
 
     private static int oreColor(Block block) {
-        if (isSelected("Diamond Ore", block, Blocks.DIAMOND_ORE, Blocks.DEEPSLATE_DIAMOND_ORE)) return 0xFF35D9F5;
+        if (isSelected("Diamond Ore", block, Blocks.DIAMOND_ORE)) return 0xFF35D9F5;
         if (isSelected("Deepslate Diamond Ore", block, Blocks.DEEPSLATE_DIAMOND_ORE)) return 0xFF35D9F5;
         if (isSelected("Ancient Debris", block, Blocks.ANCIENT_DEBRIS)) return 0xFFFF8A35;
         if (isSelected("Emerald Ore", block, Blocks.EMERALD_ORE, Blocks.DEEPSLATE_EMERALD_ORE)) return 0xFF39E879;
@@ -107,24 +108,14 @@ public final class ModuleFeatures {
         return value.toLowerCase().replaceAll("[^a-z0-9]+", "_");
     }
 
-    public static void renderEsp(WorldRenderContext context) {
-        Minecraft client = Minecraft.getInstance();
-        if (client.player == null || client.level == null || ESP_BLOCKS.isEmpty()) return;
-        var camera = client.gameRenderer.getMainCamera().position();
-        var matrices = context.matrices();
-        var queue = context.commandQueue();
-        if (matrices == null || queue == null) return;
+    private static void submitEsp() {
+        if (ESP_BLOCKS.isEmpty()) return;
 
         for (EspBlock target : ESP_BLOCKS) {
-            matrices.pushPose();
-            matrices.translate(target.pos().getX() - camera.x, target.pos().getY() - camera.y, target.pos().getZ() - camera.z);
-            int color = target.color();
-            float red = ((color >> 16) & 255) / 255.0f;
-            float green = ((color >> 8) & 255) / 255.0f;
-            float blue = (color & 255) / 255.0f;
-            queue.submitCustomGeometry(matrices, RenderTypes.lines(), (pose, consumer) ->
-                    LevelRenderer.renderLineBox(consumer, 0, 0, 0, 1, 1, 1, red, green, blue, 1.0f));
-            matrices.popPose();
+            Gizmos.cuboid(
+                    new AABB(target.pos()),
+                    GizmoStyle.stroke(target.color(), 2.0f)
+            );
         }
     }
 
