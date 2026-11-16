@@ -6,11 +6,15 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DonutScreen extends Screen {
     private final List<Module> modules = new ArrayList<>();
     private String category = "All";
     private Module selected;
+    private float openProgress;
+    private final Map<String, Float> toggleProgress = new HashMap<>();
 
     private static final int BG = 0xFF101115, HEADER = 0xFF17191F;
     private static final int SIDE = 0xFF14161B, PANEL = 0xFF191C23;
@@ -78,15 +82,27 @@ public class DonutScreen extends Screen {
 
     private String key(String s) { return s.toLowerCase().replaceAll("[^a-z0-9]+","_"); }
     private void txt(GuiGraphics g,String s,int x,int y,int color) { g.drawString(font,s,x,y,color,false); }
-    private void toggle(GuiGraphics g,int x,int y,boolean on) {
-        g.fill(x,y,x+30,y+16,on ? 0xFF326B50 : 0xFF424955);
-        g.fill(on ? x+16 : x+2,y+2,on ? x+28 : x+14,y+14,WHITE);
+    private void toggle(GuiGraphics g,int x,int y,boolean on,String id) {
+        float target = on ? 1.0f : 0.0f;
+        float amount = toggleProgress.compute(id, (k,v) -> v == null ? target : v + (target-v)*0.28f);
+        int track = blend(0xFF424955,0xFF326B50,amount);
+        int knobX = x + 2 + Math.round(14 * amount);
+        g.fill(x,y,x+30,y+16,track);
+        g.fill(knobX,y+2,knobX+12,y+14,WHITE);
+    }
+    private int blend(int a,int b,float t) {
+        int r=(int)(((a>>16)&255)*(1-t)+((b>>16)&255)*t);
+        int gr=(int)(((a>>8)&255)*(1-t)+((b>>8)&255)*t);
+        int bl=(int)((a&255)*(1-t)+(b&255)*t);
+        return 0xFF000000|(r<<16)|(gr<<8)|bl;
     }
 
     @Override
     public void render(GuiGraphics g,int mouseX,int mouseY,float delta) {
+        openProgress = Math.min(1.0f, openProgress + delta * 4.5f);
+        int slide = Math.round((1.0f-openProgress)*18.0f);
         g.fill(0,0,width,height,0xC9000000);
-        int x=px(), y=py(), w=pw(), bottom=y+ph();
+        int x=px(), y=py()+slide, w=pw(), bottom=y+ph();
         int sideY=y+72, top=y+96, rightX=rx(), rightY=y+72, contentX=cx();
         g.fill(x,y,x+w,bottom,BG);
         g.fill(x,y,x+w,y+72,HEADER);
@@ -135,7 +151,7 @@ public class DonutScreen extends Screen {
             txt(g,m.getDescription(),bx+14,by+36,MUTED);
             txt(g,m.getCategory().toUpperCase(),bx+14,by+57,0xFF737D8B);
             txt(g,m.isFavorite()?"★":"☆",bx+cardW-78,by+15,m.isFavorite()?RED:MUTED);
-            toggle(g,bx+cardW-48,by+48,m.isEnabled());
+            toggle(g,bx+cardW-48,by+48,m.isEnabled(),"module."+m.getName());
         }
 
         // Settings panel
@@ -153,7 +169,7 @@ public class DonutScreen extends Screen {
             int enableY=rightY+98;
             g.fill(rightX+16,enableY,x+w-16,enableY+39,CARD);
             txt(g,"Enabled",rightX+28,enableY+15,WHITE);
-            toggle(g,x+w-61,enableY+11,selected.isEnabled());
+            toggle(g,x+w-61,enableY+11,selected.isEnabled(),"selected."+selected.getName());
             txt(g,"MODULE OPTIONS",rightX+18,rightY+160,MUTED);
             String[] opts=options(selected);
             boolean compactOptions = selected.getName().equals("BlockESP") || selected.getName().equals("StorageESP");
@@ -163,7 +179,7 @@ public class DonutScreen extends Screen {
                 int rowHeight = compactOptions ? 23 : 39;
                 g.fill(rightX+16,oy,x+w-16,oy+rowHeight,CARD);
                 txt(g,opts[i],rightX+28,oy+(compactOptions ? 8 : 15),WHITE);
-                toggle(g,x+w-61,oy+(compactOptions ? 4 : 11),value);
+                toggle(g,x+w-61,oy+(compactOptions ? 4 : 11),value,"setting."+selected.getName()+"."+key(opts[i]));
             }
             txt(g,"Settings save automatically",rightX+18,bottom-57,MUTED);
         }
