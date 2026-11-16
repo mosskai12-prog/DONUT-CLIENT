@@ -1,4 +1,3 @@
-
 package dev.donutclient;
 
 import com.mojang.blaze3d.platform.InputConstants;
