@@ -31,7 +31,8 @@ public class DonutScreen extends Screen {
         modules.add(new Module("Amethyst Scanner","World","Scans amethyst blocks."));
         modules.add(new Module("Light Debug","Render","Displays light information."));
         modules.add(new Module("Sound Detector","World","Detects nearby sounds."));
-        modules.add(new Module("BlockESP","Render","Highlights selected blocks."));
+        modules.add(new Module("BlockESP","Render","Highlights selected ores."));
+        modules.add(new Module("StorageESP","Render","Highlights nearby storage blocks."));
     }
 
     @Override public boolean isPauseScreen() { return false; }
@@ -63,7 +64,14 @@ public class DonutScreen extends Screen {
             case "Amethyst Scanner" -> new String[]{"Show cluster markers","Show distance"};
             case "Light Debug" -> new String[]{"Show block light","Show sky light"};
             case "Sound Detector" -> new String[]{"Show direction","Show distance"};
-            case "BlockESP" -> new String[]{"Highlight ores","Highlight containers"};
+            case "BlockESP" -> new String[]{
+                    "Diamond Ore","Deepslate Diamond Ore","Ancient Debris",
+                    "Emerald Ore","Gold Ore","Iron Ore","Copper Ore",
+                    "Redstone Ore","Lapis Lazuli Ore","Coal Ore"
+            };
+            case "StorageESP" -> new String[]{
+                    "Chests","Trapped Chests","Ender Chests","Barrels","Shulker Boxes"
+            };
             default -> new String[]{"Show module indicator","Enable notifications"};
         };
     }
@@ -148,12 +156,14 @@ public class DonutScreen extends Screen {
             toggle(g,x+w-61,enableY+11,selected.isEnabled());
             txt(g,"MODULE OPTIONS",rightX+18,rightY+160,MUTED);
             String[] opts=options(selected);
+            boolean compactOptions = selected.getName().equals("BlockESP") || selected.getName().equals("StorageESP");
             for(int i=0;i<opts.length;i++) {
-                int oy=rightY+176+i*49;
+                int oy=rightY+(compactOptions ? 142 : 176)+i*(compactOptions ? 27 : 49);
                 boolean value=ModuleConfig.getBoolean(selected.getName(),key(opts[i]),true);
-                g.fill(rightX+16,oy,x+w-16,oy+39,CARD);
-                txt(g,opts[i],rightX+28,oy+15,WHITE);
-                toggle(g,x+w-61,oy+11,value);
+                int rowHeight = compactOptions ? 23 : 39;
+                g.fill(rightX+16,oy,x+w-16,oy+rowHeight,CARD);
+                txt(g,opts[i],rightX+28,oy+(compactOptions ? 8 : 15),WHITE);
+                toggle(g,x+w-61,oy+(compactOptions ? 4 : 11),value);
             }
             txt(g,"Settings save automatically",rightX+18,bottom-57,MUTED);
         }
@@ -195,9 +205,11 @@ public class DonutScreen extends Screen {
                     selected.toggle(); return true;
                 }
                 String[] opts=options(selected);
+                boolean compactOptions = selected.getName().equals("BlockESP") || selected.getName().equals("StorageESP");
                 for(int i=0;i<opts.length;i++) {
-                    int oy=rightY+176+i*49;
-                    if(mx>=rightX+16 && mx<=x+w-16 && my>=oy && my<=oy+39) {
+                    int oy=rightY+(compactOptions ? 142 : 176)+i*(compactOptions ? 27 : 49);
+                    int rowHeight = compactOptions ? 23 : 39;
+                    if(mx>=rightX+16 && mx<=x+w-16 && my>=oy && my<=oy+rowHeight) {
                         String setting=key(opts[i]);
                         boolean value=ModuleConfig.getBoolean(selected.getName(),setting,true);
                         ModuleConfig.setBoolean(selected.getName(),setting,!value);
