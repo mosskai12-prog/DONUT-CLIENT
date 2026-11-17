@@ -53,6 +53,7 @@ public class DonutScreen extends Screen {
     public DonutScreen() {
         super(Component.literal("Fizzy Client"));
         modules.add(new Module("Base Finder", "Visual", "Finds configured base markers."));
+        modules.add(new Module("Sus Chunk Finder", "Visual", "Shows nearby loaded machine blocks as clues, not proof of a base."));
         modules.add(new Module("Fullbright", "Visual", "Makes dark areas easier to see."));
         modules.add(new Module("Fly", "Blatant", "Flight controls. Requires a supported game mode."));
         modules.add(new Module("Progress Bar", "Visual", "Displays progress information."));
@@ -161,7 +162,7 @@ public class DonutScreen extends Screen {
         return switch (module.getName()) {
             case "Fullbright", "Toggle Sprint", "BlockESP", "Storage ESP",
                     "Coordinates HUD", "FPS Counter", "Direction HUD", "Armor HUD",
-                    "Progress Bar", "Light Debug" -> true;
+                    "Progress Bar", "Light Debug", "Sus Chunk Finder" -> true;
             default -> false;
         };
     }
@@ -186,6 +187,7 @@ public class DonutScreen extends Screen {
             case "Toggle Sprint" -> new String[]{"Require forward movement", "Stop while sneaking"};
             case "Progress Bar" -> new String[]{"Show level", "Show percentage"};
             case "Light Debug" -> new String[]{"Show block light", "Show sky light"};
+            case "Sus Chunk Finder" -> new String[]{"Wide scan", "Show distance", "Show icons"};
             default -> new String[0];
         };
     }
