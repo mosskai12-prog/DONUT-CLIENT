@@ -4,7 +4,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FontDescription;
 import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
@@ -47,7 +46,7 @@ public class DonutScreen extends Screen {
     };
 
     public DonutScreen() {
-        super(Component.literal("DONUT MODULE CONTROL"));
+        super(Component.literal("Fizzy Client"));
         modules.add(new Module("Base Finder", "Visual", "Finds configured base markers."));
         modules.add(new Module("Fullbright", "Visual", "Makes dark areas easier to see."));
         modules.add(new Module("Fly", "Blatant", "Flight controls. Requires a supported game mode."));
@@ -107,8 +106,7 @@ public class DonutScreen extends Screen {
     }
 
     private Component uiText(String value) {
-        return Component.literal(value).withStyle(style ->
-                style.withFont(new FontDescription.Resource(Identifier.withDefaultNamespace("uniform"))));
+        return Component.literal(value);
     }
 
     private int uiWidth(String value) {
@@ -184,7 +182,7 @@ public class DonutScreen extends Screen {
     private void drawHeader(GuiGraphics g, int x, int y, int w) {
         roundRect(g, x, y, w, 48, 10, PANEL_DARK);
         donutMark(g, x + 13, y + 14);
-        text(g, "DONUT", x + 37, y + 12, 0xFFD6EAF1);
+        text(g, "FIZZY", x + 37, y + 12, 0xFFD6EAF1);
         text(g, "MODULE CONTROL", x + 37, y + 25, MUTED);
 
         String[] tabs = {"Modules", "HUD", "Appearance"};
@@ -417,7 +415,7 @@ public class DonutScreen extends Screen {
         fill(g, x, y, w, h, PANEL);
         border(g, x, y, w, h, BORDER);
         text(g, "APPEARANCE", x + 14, y + 15, LIME);
-        text(g, "DONUT CLIENT interface theme", x + 14, y + 34, MUTED);
+        text(g, "Fizzy Client interface theme", x + 14, y + 34, MUTED);
         text(g, "Accent colour", x + 14, y + 72, WHITE);
         int[] colors = {LIME, PINK, 0xFF9BD8E5, 0xFFB7A4F5};
         for (int i = 0; i < colors.length; i++) {
@@ -462,7 +460,7 @@ public class DonutScreen extends Screen {
 
         fill(g, x, y + h - 23, w, 23, PANEL_DARK);
         fill(g, x, y + h - 24, w, 1, BORDER);
-        text(g, "DONUT  /  YOUR WORKSPACE", x + 14, y + h - 15, MUTED);
+        text(g, "FIZZY  /  YOUR WORKSPACE", x + 14, y + h - 15, MUTED);
         long enabled = modules.stream().filter(Module::isEnabled).count();
         String count = enabled + " modules active";
         text(g, count, x + w - font.width(count) - 14, y + h - 15, MUTED);
