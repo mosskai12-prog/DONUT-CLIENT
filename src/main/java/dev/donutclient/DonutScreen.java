@@ -98,9 +98,10 @@ public class DonutScreen extends Screen {
     }
 
     // Direct texture sampling keeps the rounded panel texture out of the GUI sprite atlas.
-    private void panelRegion(GuiGraphics g, int x, int y, int u, int v, int w, int h, int color) {
+    private void panelRegion(GuiGraphics g, int x, int y, int u, int v,
+                             int destW, int destH, int sourceW, int sourceH, int color) {
         g.blit(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, x, y,
-                u / 32.0f, v / 32.0f, w, h, 32, 32, color);
+                u / 32.0f, v / 32.0f, destW, destH, sourceW, sourceH, 32, 32, color);
     }
 
     private void roundRect(GuiGraphics g, int x, int y, int w, int h, int radius, int color) {
@@ -108,19 +109,19 @@ public class DonutScreen extends Screen {
         int c = Math.min(8, Math.min(w / 2, h / 2));
         int dw = Math.max(0, w - c * 2);
         int dh = Math.max(0, h - c * 2);
-        panelRegion(g, x, y, 0, 0, c, c, color);
-        panelRegion(g, x + w - c, y, 32-c, 0, c, c, color);
-        panelRegion(g, x, y + h - c, 0, 32-c, c, c, color);
-        panelRegion(g, x + w - c, y + h - c, 32-c, 32-c, c, c, color);
+        panelRegion(g, x, y, 0, 0, c, c, c, c, color);
+        panelRegion(g, x + w - c, y, 32-c, 0, c, c, c, c, color);
+        panelRegion(g, x, y + h - c, 0, 32-c, c, c, c, c, color);
+        panelRegion(g, x + w - c, y + h - c, 32-c, 32-c, c, c, c, c, color);
         if (dw > 0) {
-            panelRegion(g, x+c, y, c, 0, dw, c, color);
-            panelRegion(g, x+c, y+h-c, c, 32-c, dw, c, color);
+            panelRegion(g, x+c, y, c, 0, dw, c, 32-2*c, c, color);
+            panelRegion(g, x+c, y+h-c, c, 32-c, dw, c, 32-2*c, c, color);
         }
         if (dh > 0) {
-            panelRegion(g, x, y+c, 0, c, c, dh, color);
-            panelRegion(g, x+w-c, y+c, 32-c, c, c, dh, color);
+            panelRegion(g, x, y+c, 0, c, c, dh, c, 32-2*c, color);
+            panelRegion(g, x+w-c, y+c, 32-c, c, c, dh, c, 32-2*c, color);
         }
-        if (dw > 0 && dh > 0) panelRegion(g, x+c, y+c, c, c, dw, dh, color);
+        if (dw > 0 && dh > 0) panelRegion(g, x+c, y+c, c, c, dw, dh, 32-2*c, 32-2*c, color);
     }
 
     private void drawCatIcon(GuiGraphics g, int x, int y, int size) {
