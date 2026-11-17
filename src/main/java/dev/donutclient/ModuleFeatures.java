@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
@@ -115,7 +116,9 @@ public final class ModuleFeatures {
         blockTargets.clear();
         storageTargets.clear();
 
-        int radius = ModuleConfig.getBoolean("BlockESP", "wide_scan", false) ? 32 : 20;
+        boolean wideBlock = blockEsp && ModuleConfig.getBoolean("BlockESP", "wide_scan", false);
+        boolean wideStorage = storageEsp && ModuleConfig.getBoolean("Storage ESP", "wide_scan", false);
+        int radius = (wideBlock || wideStorage) ? 32 : 20;
         int vertical = 12;
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         Set<Block> selected = BlockSelection.selectedBlocks();
@@ -202,6 +205,33 @@ public final class ModuleFeatures {
                 }
             }
             graphics.drawString(client.font, armor.toString(), 8, y, 0xFF80D9F2, true);
+            y += 12;
+        }
+        if (ModuleConfig.isEnabled("Light Debug")) {
+            BlockPos pos = client.player.blockPosition();
+            boolean showBlock = ModuleConfig.getBoolean("Light Debug", "show_block_light", true);
+            boolean showSky = ModuleConfig.getBoolean("Light Debug", "show_sky_light", true);
+            StringBuilder light = new StringBuilder("LIGHT  ");
+            if (showBlock) light.append("BLOCK ").append(client.level.getBrightness(LightLayer.BLOCK, pos)).append("  ");
+            if (showSky) light.append("SKY ").append(client.level.getBrightness(LightLayer.SKY, pos));
+            graphics.drawString(client.font, light.toString(), 8, y, 0xFFFFD27A, true);
+            y += 12;
+        }
+        if (ModuleConfig.isEnabled("Progress Bar")) {
+            int barWidth = 142;
+            int barX = (client.getWindow().getGuiScaledWidth() - barWidth) / 2;
+            int barY = client.getWindow().getGuiScaledHeight() - 46;
+            float progress = Math.max(0.0f, Math.min(1.0f, client.player.experienceProgress));
+            graphics.fill(barX, barY, barX + barWidth, barY + 7, 0xCC111722);
+            graphics.fill(barX + 1, barY + 1, barX + 1 + Math.round((barWidth - 2) * progress), barY + 6, 0xFF9CFB65);
+            if (ModuleConfig.getBoolean("Progress Bar", "show_level", true)) {
+                String level = "LEVEL " + client.player.experienceLevel;
+                graphics.drawString(client.font, level, barX, barY - 12, 0xFFF1F3F5, true);
+            }
+            if (ModuleConfig.getBoolean("Progress Bar", "show_percentage", true)) {
+                String percent = Math.round(progress * 100) + "%";
+                graphics.drawString(client.font, percent, barX + barWidth - client.font.width(percent), barY - 12, 0xFF9CFB65, true);
+            }
         }
     }
 }

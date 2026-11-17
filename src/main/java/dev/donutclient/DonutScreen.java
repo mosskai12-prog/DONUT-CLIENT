@@ -102,7 +102,15 @@ public class DonutScreen extends Screen {
     }
 
     private void drawCatIcon(GuiGraphics g, int x, int y, int size) {
-        g.blit(RenderPipelines.GUI_TEXTURED, CAT_ICON, x, y, 0, 0, size, size, 48, 48);
+        g.blit(RenderPipelines.GUI_TEXTURED, CAT_ICON, x, y, 0, 0, size, size, 64, 64);
+    }
+
+    private void largeText(GuiGraphics g, String value, int x, int y, int color, float scale) {
+        g.pose().pushMatrix();
+        g.pose().translate((float) x, (float) y);
+        g.pose().scale(scale, scale);
+        g.drawString(font, Component.literal(value), 0, 0, color, false);
+        g.pose().popMatrix();
     }
 
     private Component uiText(String value) {
@@ -135,7 +143,7 @@ public class DonutScreen extends Screen {
         return 0xFF000000 | (r << 16) | (gr << 8) | bl;
     }
 
-    private void donutMark(GuiGraphics g, int x, int y) { drawCatIcon(g, x, y, 20); }
+    private void donutMark(GuiGraphics g, int x, int y) { drawCatIcon(g, x, y, 36); }
 
     private void drawSwitch(GuiGraphics g, int x, int y, boolean active, String id) {
         float target = active ? 1f : 0f;
@@ -150,7 +158,8 @@ public class DonutScreen extends Screen {
     private boolean isImplemented(Module module) {
         return switch (module.getName()) {
             case "Fullbright", "Toggle Sprint", "BlockESP", "Storage ESP",
-                    "Coordinates HUD", "FPS Counter", "Direction HUD", "Armor HUD" -> true;
+                    "Coordinates HUD", "FPS Counter", "Direction HUD", "Armor HUD",
+                    "Progress Bar", "Light Debug" -> true;
             default -> false;
         };
     }
@@ -173,6 +182,8 @@ public class DonutScreen extends Screen {
             case "Storage ESP" -> new String[]{"Wide scan"};
             case "Fullbright" -> new String[]{"Maximum brightness", "Restore brightness on disable"};
             case "Toggle Sprint" -> new String[]{"Require forward movement", "Stop while sneaking"};
+            case "Progress Bar" -> new String[]{"Show level", "Show percentage"};
+            case "Light Debug" -> new String[]{"Show block light", "Show sky light"};
             default -> new String[0];
         };
     }
@@ -183,9 +194,9 @@ public class DonutScreen extends Screen {
 
     private void drawHeader(GuiGraphics g, int x, int y, int w) {
         roundRect(g, x, y, w, 48, 10, PANEL_DARK);
-        donutMark(g, x + 13, y + 14);
-        text(g, "FIZZY CLIENT", x + 37, y + 12, 0xFFD6EAF1);
-        text(g, "MINECRAFT CLIENT", x + 37, y + 25, MUTED);
+        donutMark(g, x + 12, y + 6);
+        largeText(g, "FIZZY CLIENT", x + 57, y + 10, 0xFFD6EAF1, 1.35f);
+        text(g, "MINECRAFT CLIENT", x + 58, y + 29, MUTED);
 
         String[] tabs = {"Modules", "HUD", "Appearance"};
         int tabRight = x + w - 18;
