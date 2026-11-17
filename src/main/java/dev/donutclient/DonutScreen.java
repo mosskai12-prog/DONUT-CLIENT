@@ -58,6 +58,8 @@ public class DonutScreen extends Screen {
         modules.add(new Module("Storage ESP", "Visual", "Highlights chests, barrels, ender chests and shulker boxes."));
         modules.add(new Module("Coordinates HUD", "Visual", "Displays your current XYZ coordinates."));
         modules.add(new Module("FPS Counter", "Visual", "Displays your current frame rate."));
+        modules.add(new Module("Direction HUD", "Visual", "Shows which compass direction you are facing."));
+        modules.add(new Module("Armor HUD", "Visual", "Shows the remaining durability of your equipped armor."));
         modules.add(new Module("Toggle Sprint", "Blatant", "Automatically sprints while moving."));
         selected = findModule("BlockESP");
     }
