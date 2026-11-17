@@ -97,25 +97,30 @@ public class DonutScreen extends Screen {
         if (w > 0 && h > 0) g.fill(x, y, x + w, y + h, color);
     }
 
-    // 9-slice textured panels keep antialiased corners crisp at every UI size.
+    // Direct texture sampling keeps the rounded panel texture out of the GUI sprite atlas.
+    private void panelRegion(GuiGraphics g, int x, int y, int u, int v, int w, int h, int color) {
+        g.blit(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, x, y,
+                u / 32.0f, v / 32.0f, w, h, 32, 32, color);
+    }
+
     private void roundRect(GuiGraphics g, int x, int y, int w, int h, int radius, int color) {
         if (w <= 0 || h <= 0) return;
         int c = Math.min(8, Math.min(w / 2, h / 2));
         int dw = Math.max(0, w - c * 2);
         int dh = Math.max(0, h - c * 2);
-        g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, 0, 0, x, y, c, c, color);
-        g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, 32-c, 0, x+w-c, y, c, c, color);
-        g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, 0, 32-c, x, y+h-c, c, c, color);
-        g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, 32-c, 32-c, x+w-c, y+h-c, c, c, color);
+        panelRegion(g, x, y, 0, 0, c, c, color);
+        panelRegion(g, x + w - c, y, 32-c, 0, c, c, color);
+        panelRegion(g, x, y + h - c, 0, 32-c, c, c, color);
+        panelRegion(g, x + w - c, y + h - c, 32-c, 32-c, c, c, color);
         if (dw > 0) {
-            g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, c, 0, x+c, y, dw, c, color);
-            g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, c, 32-c, x+c, y+h-c, dw, c, color);
+            panelRegion(g, x+c, y, c, 0, dw, c, color);
+            panelRegion(g, x+c, y+h-c, c, 32-c, dw, c, color);
         }
         if (dh > 0) {
-            g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, 0, c, x, y+c, c, dh, color);
-            g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, 32-c, c, x+w-c, y+c, c, dh, color);
+            panelRegion(g, x, y+c, 0, c, c, dh, color);
+            panelRegion(g, x+w-c, y+c, 32-c, c, c, dh, color);
         }
-        if (dw > 0 && dh > 0) g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, c, c, x+c, y+c, dw, dh, color);
+        if (dw > 0 && dh > 0) panelRegion(g, x+c, y+c, c, c, dw, dh, color);
     }
 
     private void drawCatIcon(GuiGraphics g, int x, int y, int size) {
@@ -385,12 +390,14 @@ public class DonutScreen extends Screen {
             yy += 69;
         }
 
-        int configY = Math.min(y + h - 83, yy + 8);
-        fill(g, x + 10, configY, w - 20, 1, BORDER);
-        text(g, "CONFIGURATION", x + 12, configY + 13, MUTED);
-        text(g, "Keybind", x + 12, configY + 34, WHITE);
-        roundRect(g, x + 12, configY + 48, w - 24, 23, 6, 0xFF30394C);
-        text(g, "None", x + 20, configY + 55, MUTED);
+        if (!selected.getName().equals("BlockESP") && !selected.getName().equals("Storage ESP")) {
+            int configY = Math.min(y + h - 83, yy + 8);
+            fill(g, x + 10, configY, w - 20, 1, BORDER);
+            text(g, "CONFIGURATION", x + 12, configY + 13, MUTED);
+            text(g, "Keybind", x + 12, configY + 34, WHITE);
+            roundRect(g, x + 12, configY + 48, w - 24, 23, 6, 0xFF30394C);
+            text(g, "None", x + 20, configY + 55, MUTED);
+        }
         text(g, "Favorite", x + 12, y + h - 20, WHITE);
         drawSwitch(g, x + w - 34, y + h - 23, selected.isFavorite(), "settings.favorite");
     }
