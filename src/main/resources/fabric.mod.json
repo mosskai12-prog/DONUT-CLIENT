@@ -1,7 +1,7 @@
 
 {
   "schemaVersion": 1,
-  "id": "fizzyclient",
+  "id": "donutclient",
   "version": "${version}",
   "icon": "assets/fizzy/icon.png",
   "name": "Fizzy Client",
