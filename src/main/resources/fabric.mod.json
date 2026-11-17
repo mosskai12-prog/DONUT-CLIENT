@@ -3,10 +3,11 @@
   "schemaVersion": 1,
   "id": "donutclient",
   "version": "${version}",
-  "name": "DONUT CLIENT",
-  "description": "A custom Minecraft client with a modular interface.",
+  "icon": "assets/fizzy/icon.jpg",
+  "name": "Fizzy Client",
+  "description": "Fizzy Client - a custom Minecraft client with a modular interface.",
   "authors": [
-    "DONUT CLIENT"
+    "Fizzy Client"
   ],
   "license": "All-Rights-Reserved",
   "environment": "client",
