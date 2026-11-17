@@ -93,6 +93,27 @@ public class DonutScreen extends Screen {
         if (w > 0 && h > 0) g.fill(x, y, x + w, y + h, color);
     }
 
+    private void roundRect(GuiGraphics g, int x, int y, int w, int h, int radius, int color) {
+        if (w <= 0 || h <= 0) return;
+        int r = Math.max(1, Math.min(radius, Math.min(w, h) / 2));
+        g.fill(x + r, y, x + w - r, y + h, color);
+        g.fill(x, y + r, x + w, y + h - r, color);
+        for (int row = 0; row < r; row++) {
+            int inset = r - 1 - (int) Math.floor(Math.sqrt(r * r - (r - row - 1) * (r - row - 1)));
+            g.fill(x + inset, y + row, x + w - inset, y + row + 1, color);
+            g.fill(x + inset, y + h - row - 1, x + w - inset, y + h - row, color);
+        }
+    }
+
+    private Component uiText(String value) {
+        return Component.literal(value).withStyle(style ->
+                style.withFont(Identifier.withDefaultNamespace("uniform")));
+    }
+
+    private int uiWidth(String value) {
+        return font.width(uiText(value));
+    }
+
     private void border(GuiGraphics g, int x, int y, int w, int h, int color) {
         fill(g, x, y, w, 1, color);
         fill(g, x, y + h - 1, w, 1, color);
