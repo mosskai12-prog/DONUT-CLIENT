@@ -63,6 +63,16 @@ public final class ModuleConfig {
         save();
     }
 
+    public static synchronized int getInt(String module, String setting, int fallback) {
+        try { return Integer.parseInt(VALUES.getProperty(key(module, setting), Integer.toString(fallback))); }
+        catch (NumberFormatException ignored) { return fallback; }
+    }
+
+    public static synchronized void setInt(String module, String setting, int value) {
+        VALUES.setProperty(key(module, setting), Integer.toString(value));
+        save();
+    }
+
     public static synchronized void setEnabled(String name, boolean enabled) {
         setBoolean(name, "enabled", enabled);
     }
