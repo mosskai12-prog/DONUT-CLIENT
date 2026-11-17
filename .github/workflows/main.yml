@@ -1,4 +1,4 @@
-name: Build DONUT CLIENT
+name: Build Fizzy Client
 
 on:
   workflow_dispatch:
@@ -22,20 +22,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.2.1'
-      - name: Resolve and inspect AxolotlClient rendering API
-        run: |
-          gradle dependencies --configuration modCompileClasspath
-          AXO=$(find ~/.gradle/caches -type f -iname "*2qX7WO3l*.jar" | head -n 1)
-          echo "Axolotl rendering jar: $AXO"
-          if [ -n "$AXO" ]; then
-            jar tf "$AXO" | grep -E "GuiGraphicsExtension|\.class$" | head -80
-            CLASS=$(jar tf "$AXO" | grep "GuiGraphicsExtension.class" | head -n 1 | sed "s#/#.#g; s#.class$##")
-            if [ -n "$CLASS" ]; then javap -classpath "$AXO" -p "$CLASS"; fi
-          fi
       - name: Build Minecraft mod
         run: gradle build
-      - name: Upload DONUT CLIENT JAR
+      - name: Upload Fizzy Client JAR
         uses: actions/upload-artifact@v4
         with:
-          name: DONUT-CLIENT-1.21.11
+          name: Fizzy-Client-1.21.11
           path: build/libs/*.jar
