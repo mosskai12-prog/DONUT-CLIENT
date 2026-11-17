@@ -1,11 +1,13 @@
 Third-party notices
 ===================
 
-AxolotlClient Rendering
-- Maven coordinate: io.github.axolotlclient.rendering:AxolotlClient-rendering:0.0.7+1.21.11
-- Project: https://modrinth.com/mod/axolotlclient-rendering
-- Source: https://codeberg.org/axolotlclient/axolotlclient-rendering
-- License: GNU Lesser General Public License v3.0 or later (LGPL-3.0-or-later)
+Meteor Client
+- Project: https://github.com/MeteorDevelopment/meteor-client
+- Source branch selected for compatibility: 1.21.11
+- License: GNU General Public License v3.0 (GPL-3.0)
 
-This library is included as a separate nested dependency in the Fizzy Client mod.
-Its license and source are maintained by the original project authors.
+Fizzy Client's planned source integration is based on Meteor Client. Meteor-derived
+files will retain their original copyright headers. This project will provide the
+corresponding GPL-3.0 license and make its complete corresponding source available.
+
+No AxolotlClient Rendering dependency is used by the current build.
