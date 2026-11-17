@@ -6,7 +6,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
@@ -156,13 +156,13 @@ public final class ModuleFeatures {
             float alpha = Math.max(0.15f, Math.min(1.0f, opacity / 255.0f));
             for (BlockPos pos : blockTargets) {
                 AABB box = new AABB(pos).inflate(0.002);
-                LevelRenderer.renderLineBox(matrices, lines, box, 1.0f, 0.82f, 0.22f, alpha);
+                ShapeRenderer.renderShape(matrices, lines, client.level.getBlockState(pos).getShape(client.level, pos), pos.getX(), pos.getY(), pos.getZ(), 0xFFFFD13B, 1.5f);
             }
         }
         if (storageOn) {
             for (BlockPos pos : storageTargets) {
                 AABB box = new AABB(pos).inflate(0.004);
-                LevelRenderer.renderLineBox(matrices, lines, box, 0.20f, 0.85f, 1.0f, 0.95f);
+                ShapeRenderer.renderShape(matrices, lines, client.level.getBlockState(pos).getShape(client.level, pos), pos.getX(), pos.getY(), pos.getZ(), 0xFF33D9FF, 1.5f);
             }
         }
         matrices.popPose();
