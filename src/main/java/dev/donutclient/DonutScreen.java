@@ -45,11 +45,20 @@ public class DonutScreen extends Screen {
 
     public DonutScreen() {
         super(Component.literal("DONUT MODULE CONTROL"));
+        modules.add(new Module("Base Finder", "Visual", "Finds configured base markers."));
         modules.add(new Module("Fullbright", "Visual", "Makes dark areas easier to see."));
+        modules.add(new Module("Fly", "Blatant", "Flight controls. Requires a supported game mode."));
+        modules.add(new Module("Progress Bar", "Visual", "Displays progress information."));
+        modules.add(new Module("Name Hider", "Streaming", "Hides player names in supported HUD contexts."));
+        modules.add(new Module("Hotbar", "Visual", "Displays a configurable hotbar overlay."));
+        modules.add(new Module("Amethyst Scanner", "Visual", "Displays amethyst-related information."));
+        modules.add(new Module("Light Debug", "Visual", "Displays lighting debug information."));
+        modules.add(new Module("Sound Detector", "Visual", "Displays sound event indicators."));
+        modules.add(new Module("BlockESP", "Visual", "Highlights configured block locations."));
         modules.add(new Module("Coordinates HUD", "Visual", "Displays your current XYZ coordinates."));
         modules.add(new Module("FPS Counter", "Visual", "Displays your current frame rate."));
         modules.add(new Module("Toggle Sprint", "Blatant", "Automatically sprints while moving."));
-        selected = modules.get(0);
+        selected = findModule("BlockESP");
     }
 
     @Override
@@ -57,8 +66,8 @@ public class DonutScreen extends Screen {
         return false;
     }
 
-    private int panelWidth() { return Math.min(780, width - 24); }
-    private int panelHeight() { return Math.min(460, height - 24); }
+    private int panelWidth() { return Math.min(826, width - 36); }
+    private int panelHeight() { return Math.min(520, height - 36); }
     private int left() {
         if (windowX == Integer.MIN_VALUE) windowX = (width - panelWidth()) / 2;
         return Math.max(4, Math.min(width - panelWidth() - 4, windowX));
@@ -133,6 +142,7 @@ public class DonutScreen extends Screen {
 
     private String[] settingsFor(Module module) {
         return switch (module.getName()) {
+            case "BlockESP" -> new String[]{"Tracers", "Coordinates / distance HUD", "Predictions"};
             case "Fullbright" -> new String[]{"Maximum brightness", "Restore brightness on disable"};
             case "Toggle Sprint" -> new String[]{"Require forward movement", "Stop while sneaking"};
             default -> new String[0];
@@ -276,6 +286,31 @@ public class DonutScreen extends Screen {
         int lineY = descY + 8;
         fill(g, x + 10, lineY, w - 20, 1, BORDER);
         int yy = lineY + 13;
+        if (selected.getName().equals("BlockESP")) {
+            text(g, "Opacity", x + 12, yy, WHITE);
+            text(g, "210", x + w - 28, yy, MUTED);
+            fill(g, x + 12, yy + 19, w - 24, 2, 0xFF62666D);
+            fill(g, x + 12, yy + 19, (w - 24) * 7 / 8, 2, 0xFFE7E9ED);
+            fill(g, x + w - 31, yy + 15, 7, 10, WHITE);
+            yy += 42;
+            for (String option : settingsFor(selected)) {
+                boolean value = ModuleConfig.getBoolean(selected.getName(), settingKey(option), option.equals("Predictions"));
+                text(g, option, x + 12, yy + 3, WHITE);
+                drawSwitch(g, x + w - 34, yy + 1, value, "setting." + selected.getName() + "." + settingKey(option));
+                yy += 29;
+            }
+            text(g, "PREDICTIONS", x + 12, yy + 1, MUTED);
+            text(g, "Predicting 0 / 81 chunks", x + 12, yy + 16, WHITE);
+            fill(g, x + 12, yy + 34, w - 24, 22, 0xFF30343A);
+            border(g, x + 12, yy + 34, w - 24, 22, BORDER);
+            centered(g, "Rescan predictions", x + w / 2, yy + 41, WHITE);
+            yy += 66;
+            for (String line : wrap("Predicts original ore positions in the Overworld. Match the version that generated the chunks. Ores may already be mined; larger radii take longer.", w - 24)) {
+                text(g, line, x + 12, yy, MUTED);
+                yy += 11;
+            }
+            yy += 8;
+        }
         if (selected.getName().equals("Fullbright")) {
             text(g, "Brightness", x + 12, yy, WHITE);
             text(g, "100%", x + w - 40, yy, MUTED);
@@ -510,6 +545,7 @@ public class DonutScreen extends Screen {
             int descY = sy + 78 + wrap(selected.getDescription(), sw - 24).size() * 12;
             int lineY = descY + 8;
             int yySettings = lineY + 13;
+            if (selected.getName().equals("BlockESP")) yySettings += 42;
             if (selected.getName().equals("Fullbright")) yySettings += 48;
             for (String option : settings) {
                 if (mx >= sx + sw - 45 && mx <= sx + sw - 8
