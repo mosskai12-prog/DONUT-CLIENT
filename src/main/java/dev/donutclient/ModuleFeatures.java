@@ -6,7 +6,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.ShapeRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
@@ -99,7 +99,7 @@ public final class ModuleFeatures {
 
     private static void scanForTargets(Minecraft client) {
         boolean blockEsp = ModuleConfig.isEnabled("BlockESP");
-        boolean storageEsp = ModuleConfig.isEnabled("StorageESP");
+        boolean storageEsp = ModuleConfig.isEnabled("Storage ESP");
         if (!blockEsp && !storageEsp) {
             blockTargets.clear();
             storageTargets.clear();
@@ -156,13 +156,13 @@ public final class ModuleFeatures {
             float alpha = Math.max(0.15f, Math.min(1.0f, opacity / 255.0f));
             for (BlockPos pos : blockTargets) {
                 AABB box = new AABB(pos).inflate(0.002);
-                ShapeRenderer.renderLineBox(matrices.last(), lines, box, 1.0f, 0.82f, 0.22f, alpha);
+                LevelRenderer.renderLineBox(matrices, lines, box, 1.0f, 0.82f, 0.22f, alpha);
             }
         }
         if (storageOn) {
             for (BlockPos pos : storageTargets) {
                 AABB box = new AABB(pos).inflate(0.004);
-                ShapeRenderer.renderLineBox(matrices.last(), lines, box, 0.20f, 0.85f, 1.0f, 0.95f);
+                LevelRenderer.renderLineBox(matrices, lines, box, 0.20f, 0.85f, 1.0f, 0.95f);
             }
         }
         matrices.popPose();
@@ -182,6 +182,25 @@ public final class ModuleFeatures {
         }
         if (ModuleConfig.isEnabled("FPS Counter")) {
             graphics.drawString(client.font, "FPS  " + client.getFps(), 8, y, 0xFF63D69A, true);
+            y += 12;
+        }
+        if (ModuleConfig.isEnabled("Direction HUD")) {
+            graphics.drawString(client.font, "FACING  " + client.player.getDirection().getName().toUpperCase(),
+                    8, y, 0xFFE9A9C5, true);
+            y += 12;
+        }
+        if (ModuleConfig.isEnabled("Armor HUD")) {
+            StringBuilder armor = new StringBuilder("ARMOR  ");
+            for (int i = client.player.getInventory().getArmor().size() - 1; i >= 0; i--) {
+                var stack = client.player.getInventory().getArmor().get(i);
+                if (stack.isEmpty()) armor.append("--  ");
+                else {
+                    int max = stack.getMaxDamage();
+                    int remaining = max <= 0 ? 100 : (max - stack.getDamageValue()) * 100 / max;
+                    armor.append(remaining).append("%  ");
+                }
+            }
+            graphics.drawString(client.font, armor.toString(), 8, y, 0xFF80D9F2, true);
         }
     }
 }
