@@ -20,6 +20,11 @@ public class DonutScreen extends Screen {
     private boolean searchFocused;
     private boolean enabledOnly;
     private float open = 0f;
+    private boolean dragging;
+    private double dragOffsetX;
+    private double dragOffsetY;
+    private int windowX = Integer.MIN_VALUE;
+    private int windowY = Integer.MIN_VALUE;
 
     private static final int OUTER = 0xFF111318;
     private static final int PANEL = 0xFF1A1C21;
@@ -52,10 +57,16 @@ public class DonutScreen extends Screen {
         return false;
     }
 
-    private int panelWidth() { return Math.min(1120, width - 28); }
-    private int panelHeight() { return Math.min(680, height - 28); }
-    private int left() { return (width - panelWidth()) / 2; }
-    private int top() { return (height - panelHeight()) / 2; }
+    private int panelWidth() { return Math.min(780, width - 24); }
+    private int panelHeight() { return Math.min(460, height - 24); }
+    private int left() {
+        if (windowX == Integer.MIN_VALUE) windowX = (width - panelWidth()) / 2;
+        return Math.max(4, Math.min(width - panelWidth() - 4, windowX));
+    }
+    private int top() {
+        if (windowY == Integer.MIN_VALUE) windowY = (height - panelHeight()) / 2;
+        return Math.max(4, Math.min(height - panelHeight() - 4, windowY));
+    }
     private int sideWidth() { return 120; }
     private int settingsWidth() { return Math.max(205, Math.min(250, panelWidth() / 4)); }
     private int mainLeft() { return left() + sideWidth() + 12; }
@@ -361,8 +372,8 @@ public class DonutScreen extends Screen {
         int w = panelWidth();
         int h = panelHeight();
 
-        g.fill(0, 0, width, height, 0xB9000000);
-        fill(g, x - 2, y - 2, w + 4, h + 4, 0xFF090A0C);
+        // Keep the Minecraft world visible; only draw a subtle shadow behind the compact window.
+        fill(g, x - 3, y - 3, w + 6, h + 6, 0x66000000);
         fill(g, x, y, w, h, OUTER);
         border(g, x, y, w, h, 0xFF555B65);
         drawHeader(g, x, y, w);
@@ -403,6 +414,14 @@ public class DonutScreen extends Screen {
         int y = top() + Math.round((1f - open) * 10f);
         int w = panelWidth();
         int h = panelHeight();
+
+        // Drag the window using its title bar, away from the tab buttons.
+        if (mx >= x + 150 && mx <= x + w - 150 && my >= y + 2 && my <= y + 46) {
+            dragging = true;
+            dragOffsetX = mx - x;
+            dragOffsetY = my - y;
+            return true;
+        }
 
         String[] tabs = {"Modules", "HUD", "Appearance"};
         int tabRight = x + w - 18;
@@ -504,6 +523,24 @@ public class DonutScreen extends Screen {
             }
         }
         return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dragX, double dragY) {
+        if (dragging) {
+            windowX = (int) (event.x() - dragOffsetX);
+            windowY = (int) (event.y() - dragOffsetY);
+            windowX = Math.max(4, Math.min(width - panelWidth() - 4, windowX));
+            windowY = Math.max(4, Math.min(height - panelHeight() - 4, windowY));
+            return true;
+        }
+        return super.mouseDragged(event, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        dragging = false;
+        return super.mouseReleased(event);
     }
 
     @Override
