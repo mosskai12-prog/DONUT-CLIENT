@@ -29,7 +29,6 @@ public class DonutScreen extends Screen {
     private int windowX = Integer.MIN_VALUE;
     private int windowY = Integer.MIN_VALUE;
 
-    private static final Identifier PANEL_TEXTURE = Identifier.fromNamespaceAndPath("fizzy", "textures/gui/rounded.png");
     private static final Identifier CAT_ICON = Identifier.fromNamespaceAndPath("fizzy", "icon.png");
 
     private static final int OUTER = 0xFF10131B;
@@ -97,31 +96,9 @@ public class DonutScreen extends Screen {
         if (w > 0 && h > 0) g.fill(x, y, x + w, y + h, color);
     }
 
-    // Direct texture sampling keeps the rounded panel texture out of the GUI sprite atlas.
-    private void panelRegion(GuiGraphics g, int x, int y, int u, int v,
-                             int destW, int destH, int sourceW, int sourceH, int color) {
-        g.blit(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, x, y,
-                u / 32.0f, v / 32.0f, destW, destH, sourceW, sourceH, 32, 32, color);
-    }
-
+    // Native Minecraft GUI fills: no custom texture, atlas, UVs, or pixel-built corners.
     private void roundRect(GuiGraphics g, int x, int y, int w, int h, int radius, int color) {
-        if (w <= 0 || h <= 0) return;
-        int c = Math.min(8, Math.min(w / 2, h / 2));
-        int dw = Math.max(0, w - c * 2);
-        int dh = Math.max(0, h - c * 2);
-        panelRegion(g, x, y, 0, 0, c, c, c, c, color);
-        panelRegion(g, x + w - c, y, 32-c, 0, c, c, c, c, color);
-        panelRegion(g, x, y + h - c, 0, 32-c, c, c, c, c, color);
-        panelRegion(g, x + w - c, y + h - c, 32-c, 32-c, c, c, c, c, color);
-        if (dw > 0) {
-            panelRegion(g, x+c, y, c, 0, dw, c, 32-2*c, c, color);
-            panelRegion(g, x+c, y+h-c, c, 32-c, dw, c, 32-2*c, c, color);
-        }
-        if (dh > 0) {
-            panelRegion(g, x, y+c, 0, c, c, dh, c, 32-2*c, color);
-            panelRegion(g, x+w-c, y+c, 32-c, c, c, dh, c, 32-2*c, color);
-        }
-        if (dw > 0 && dh > 0) panelRegion(g, x+c, y+c, c, c, dw, dh, 32-2*c, 32-2*c, color);
+        fill(g, x, y, w, h, color);
     }
 
     private void drawCatIcon(GuiGraphics g, int x, int y, int size) {
@@ -348,13 +325,13 @@ public class DonutScreen extends Screen {
             text(g, "BLOCKS TO HIGHLIGHT", x + 12, yy, MUTED);
             yy += 18;
             for (String name : BlockSelection.names()) {
-                if (yy > y + h - 42) break;
+                if (yy > y + h - 76) break;
                 boolean checked = BlockSelection.isSelected(name);
                 text(g, checked ? "[x]" : "[ ]", x + 12, yy, checked ? LIME : DIM);
                 text(g, name, x + 38, yy, WHITE);
                 yy += 17;
             }
-            text(g, "Select any combination of blocks", x + 12, y + h - 36, MUTED);
+            text(g, "Select any combination of blocks", x + 12, y + h - 43, MUTED);
         }
         if (selected.getName().equals("Storage ESP")) {
             text(g, "STORAGE TYPES", x + 12, yy, MUTED);
@@ -399,8 +376,10 @@ public class DonutScreen extends Screen {
             roundRect(g, x + 12, configY + 48, w - 24, 23, 6, 0xFF30394C);
             text(g, "None", x + 20, configY + 55, MUTED);
         }
-        text(g, "Favorite", x + 12, y + h - 20, WHITE);
-        drawSwitch(g, x + w - 34, y + h - 23, selected.isFavorite(), "settings.favorite");
+        if (!selected.getName().equals("BlockESP") && !selected.getName().equals("Storage ESP")) {
+            text(g, "Favorite", x + 12, y + h - 20, WHITE);
+            drawSwitch(g, x + w - 34, y + h - 23, selected.isFavorite(), "settings.favorite");
+        }
     }
 
     private List<String> wrap(String value, int maxWidth) {
@@ -594,7 +573,8 @@ public class DonutScreen extends Screen {
             int sy = my0;
             int sw = settingsWidth();
             int sh = bodyBottom() - my0;
-            if (mx >= sx && mx <= sx + sw && my >= sy + sh - 31 && my <= sy + sh) {
+            if (!selected.getName().equals("BlockESP") && !selected.getName().equals("Storage ESP")
+                    && mx >= sx && mx <= sx + sw && my >= sy + sh - 31 && my <= sy + sh) {
                 selected.toggleFavorite();
                 return true;
             }
