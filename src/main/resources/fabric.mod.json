@@ -1,7 +1,7 @@
 
 {
   "schemaVersion": 1,
-  "id": "donutclient",
+  "id": "fizzyclient",
   "version": "${version}",
   "icon": "assets/fizzy/icon.png",
   "name": "Fizzy Client",
@@ -9,7 +9,7 @@
   "authors": [
     "Fizzy Client"
   ],
-  "license": "All-Rights-Reserved",
+  "license": "GPL-3.0",
   "environment": "client",
   "entrypoints": {
     "client": [
