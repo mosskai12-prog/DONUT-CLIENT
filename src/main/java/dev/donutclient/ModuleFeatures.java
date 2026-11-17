@@ -9,6 +9,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
@@ -142,7 +143,7 @@ public final class ModuleFeatures {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null || client.level == null || client.options.hideGui) return;
         boolean blockOn = ModuleConfig.isEnabled("BlockESP");
-        boolean storageOn = ModuleConfig.isEnabled("StorageESP");
+        boolean storageOn = ModuleConfig.isEnabled("Storage ESP");
         if (!blockOn && !storageOn) return;
 
         PoseStack matrices = context.matrices();
@@ -156,7 +157,7 @@ public final class ModuleFeatures {
             float alpha = Math.max(0.15f, Math.min(1.0f, opacity / 255.0f));
             for (BlockPos pos : blockTargets) {
                 AABB box = new AABB(pos).inflate(0.002);
-                ShapeRenderer.renderShape(matrices, lines, client.level.getBlockState(pos).getShape(client.level, pos), pos.getX(), pos.getY(), pos.getZ(), 0xFFFFD13B, 1.5f);
+                ShapeRenderer.renderShape(matrices, lines, client.level.getBlockState(pos).getShape(client.level, pos), pos.getX(), pos.getY(), pos.getZ(), (Math.max(0, Math.min(255, opacity)) << 24) | 0x00FFD13B, 1.5f);
             }
         }
         if (storageOn) {
@@ -191,8 +192,8 @@ public final class ModuleFeatures {
         }
         if (ModuleConfig.isEnabled("Armor HUD")) {
             StringBuilder armor = new StringBuilder("ARMOR  ");
-            for (int i = client.player.getInventory().getArmor().size() - 1; i >= 0; i--) {
-                var stack = client.player.getInventory().getArmor().get(i);
+            for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+                var stack = client.player.getItemBySlot(slot);
                 if (stack.isEmpty()) armor.append("--  ");
                 else {
                     int max = stack.getMaxDamage();
