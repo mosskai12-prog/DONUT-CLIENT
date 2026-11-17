@@ -1,6 +1,7 @@
 package dev.donutclient;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
@@ -27,6 +28,9 @@ public class DonutScreen extends Screen {
     private double dragOffsetY;
     private int windowX = Integer.MIN_VALUE;
     private int windowY = Integer.MIN_VALUE;
+
+    private static final Identifier PANEL_TEXTURE = Identifier.fromNamespaceAndPath("fizzy", "textures/gui/rounded.png");
+    private static final Identifier CAT_ICON = Identifier.fromNamespaceAndPath("fizzy", "icon.png");
 
     private static final int OUTER = 0xFF10131B;
     private static final int PANEL = 0xFF1B2030;
@@ -93,16 +97,29 @@ public class DonutScreen extends Screen {
         if (w > 0 && h > 0) g.fill(x, y, x + w, y + h, color);
     }
 
+    // 9-slice textured panels keep antialiased corners crisp at every UI size.
     private void roundRect(GuiGraphics g, int x, int y, int w, int h, int radius, int color) {
         if (w <= 0 || h <= 0) return;
-        int r = Math.max(1, Math.min(radius, Math.min(w, h) / 2));
-        g.fill(x + r, y, x + w - r, y + h, color);
-        g.fill(x, y + r, x + w, y + h - r, color);
-        for (int row = 0; row < r; row++) {
-            int inset = r - 1 - (int) Math.floor(Math.sqrt(r * r - (r - row - 1) * (r - row - 1)));
-            g.fill(x + inset, y + row, x + w - inset, y + row + 1, color);
-            g.fill(x + inset, y + h - row - 1, x + w - inset, y + h - row, color);
+        int c = Math.min(8, Math.min(w / 2, h / 2));
+        int dw = Math.max(0, w - c * 2);
+        int dh = Math.max(0, h - c * 2);
+        g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, 0, 0, x, y, c, c, color);
+        g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, 32-c, 0, x+w-c, y, c, c, color);
+        g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, 0, 32-c, x, y+h-c, c, c, color);
+        g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, 32-c, 32-c, x+w-c, y+h-c, c, c, color);
+        if (dw > 0) {
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, c, 0, x+c, y, dw, c, color);
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, c, 32-c, x+c, y+h-c, dw, c, color);
         }
+        if (dh > 0) {
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, 0, c, x, y+c, c, dh, color);
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, 32-c, c, x+w-c, y+c, c, dh, color);
+        }
+        if (dw > 0 && dh > 0) g.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, 32, 32, c, c, x+c, y+c, dw, dh, color);
+    }
+
+    private void drawCatIcon(GuiGraphics g, int x, int y, int size) {
+        g.blit(RenderPipelines.GUI_TEXTURED, CAT_ICON, x, y, 0, 0, size, size, 48, 48);
     }
 
     private Component uiText(String value) {
@@ -135,13 +152,7 @@ public class DonutScreen extends Screen {
         return 0xFF000000 | (r << 16) | (gr << 8) | bl;
     }
 
-    private void donutMark(GuiGraphics g, int x, int y) {
-        fill(g, x, y + 2, 18, 14, 0xFFB77C99);
-        fill(g, x + 2, y, 14, 18, 0xFFB77C99);
-        fill(g, x + 3, y + 3, 12, 12, 0xFF28232A);
-        fill(g, x + 6, y + 6, 6, 6, 0xFF101216);
-        fill(g, x + 4, y + 2, 4, 2, 0xFFFFD7E7);
-    }
+    private void donutMark(GuiGraphics g, int x, int y) { drawCatIcon(g, x, y, 20); }
 
     private void drawSwitch(GuiGraphics g, int x, int y, boolean active, String id) {
         float target = active ? 1f : 0f;
@@ -151,6 +162,14 @@ public class DonutScreen extends Screen {
         roundRect(g, x, y, 21, 12, 6, track);
         int knobX = x + 2 + Math.round(9 * value);
         roundRect(g, knobX, y + 2, 8, 8, 4, 0xFFF7F7F3);
+    }
+
+    private boolean isImplemented(Module module) {
+        return switch (module.getName()) {
+            case "Fullbright", "Toggle Sprint", "BlockESP", "Storage ESP",
+                    "Coordinates HUD", "FPS Counter", "Direction HUD", "Armor HUD" -> true;
+            default -> false;
+        };
     }
 
     private List<Module> visibleModules() {
@@ -182,8 +201,8 @@ public class DonutScreen extends Screen {
     private void drawHeader(GuiGraphics g, int x, int y, int w) {
         roundRect(g, x, y, w, 48, 10, PANEL_DARK);
         donutMark(g, x + 13, y + 14);
-        text(g, "FIZZY", x + 37, y + 12, 0xFFD6EAF1);
-        text(g, "MODULE CONTROL", x + 37, y + 25, MUTED);
+        text(g, "FIZZY CLIENT", x + 37, y + 12, 0xFFD6EAF1);
+        text(g, "MINECRAFT CLIENT", x + 37, y + 25, MUTED);
 
         String[] tabs = {"Modules", "HUD", "Appearance"};
         int tabRight = x + w - 18;
@@ -281,9 +300,10 @@ public class DonutScreen extends Screen {
             border(g, cx, cy, colW, cardH, active ? LIME : BORDER);
             if (active) fill(g, cx + 1, cy + 5, 2, cardH - 10, LIME);
             text(g, module.getName(), cx + 9, cy + 10, WHITE);
-            text(g, module.isEnabled() ? "ACTIVE" : "INACTIVE",
-                    cx + 9, cy + 31, module.isEnabled() ? LIME : MUTED);
-            drawSwitch(g, cx + colW - 29, cy + 17, module.isEnabled(), "card." + module.getName());
+            boolean implemented = isImplemented(module);
+            text(g, !implemented ? "COMING SOON" : module.isEnabled() ? "ACTIVE" : "INACTIVE",
+                    cx + 9, cy + 31, !implemented ? DIM : module.isEnabled() ? LIME : MUTED);
+            drawSwitch(g, cx + colW - 29, cy + 17, implemented && module.isEnabled(), "card." + module.getName());
         }
         if (visible.isEmpty()) {
             text(g, "No modules found", x + 12, cardY + 15, MUTED);
@@ -305,8 +325,10 @@ public class DonutScreen extends Screen {
         }
 
         text(g, selected.getName(), x + 12, y + 39, WHITE);
-        text(g, selected.getCategory(), x + 12, y + 57, MUTED);
+        text(g, isImplemented(selected) ? selected.getCategory() : "Not implemented yet",
+                x + 12, y + 57, isImplemented(selected) ? MUTED : 0xFFFFC27A);
         String description = selected.getDescription();
+        if (!isImplemented(selected)) description += " This module is not available yet; its toggle is disabled.";
         int descY = y + 78;
         for (String line : wrap(description, w - 24)) {
             text(g, line, x + 12, descY, WHITE);
@@ -460,7 +482,7 @@ public class DonutScreen extends Screen {
 
         fill(g, x, y + h - 23, w, 23, PANEL_DARK);
         fill(g, x, y + h - 24, w, 1, BORDER);
-        text(g, "FIZZY  /  YOUR WORKSPACE", x + 14, y + h - 15, MUTED);
+        text(g, "FIZZY CLIENT  /  YOUR WORKSPACE", x + 14, y + h - 15, MUTED);
         long enabled = modules.stream().filter(Module::isEnabled).count();
         String count = enabled + " modules active";
         text(g, count, x + w - font.width(count) - 14, y + h - 15, MUTED);
@@ -539,7 +561,7 @@ public class DonutScreen extends Screen {
                 Module module = visible.get(i);
                 if (mx >= cx && mx <= cx + colW && my >= cy && my <= cy + cardH) {
                     selected = module;
-                    if (mx >= cx + colW - 34) module.toggle();
+                    if (isImplemented(module) && mx >= cx + colW - 34) module.toggle();
                     return true;
                 }
             }
