@@ -4,6 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import java.util.Map;
 public class DonutScreen extends Screen {
     private final List<Module> modules = new ArrayList<>();
     private final Map<String, Float> switchAnimations = new HashMap<>();
+    private final Map<String, Float> hoverAnimations = new HashMap<>();
     private String category = "All modules";
     private String page = "Modules";
     private Module selected;
@@ -26,18 +28,18 @@ public class DonutScreen extends Screen {
     private int windowX = Integer.MIN_VALUE;
     private int windowY = Integer.MIN_VALUE;
 
-    private static final int OUTER = 0xFF111318;
-    private static final int PANEL = 0xFF1A1C21;
-    private static final int PANEL_DARK = 0xFF15171B;
-    private static final int CARD = 0xFF202329;
-    private static final int CARD_HOVER = 0xFF292D33;
-    private static final int BORDER = 0xFF41454D;
+    private static final int OUTER = 0xFF10131B;
+    private static final int PANEL = 0xFF1B2030;
+    private static final int PANEL_DARK = 0xFF151A27;
+    private static final int CARD = 0xFF252B3B;
+    private static final int CARD_HOVER = 0xFF333D50;
+    private static final int BORDER = 0xFF46516A;
     private static final int WHITE = 0xFFE7E9ED;
     private static final int MUTED = 0xFFA5A9B1;
     private static final int DIM = 0xFF737982;
-    private static final int LIME = 0xFFD5F18A;
-    private static final int GREEN = 0xFFB8E986;
-    private static final int PINK = 0xFFE9A9C5;
+    private static final int LIME = 0xFF9CFB65;
+    private static final int GREEN = 0xFF9CFB65;
+    private static final int PINK = 0xFFFF79C6;
 
     private static final String[] CATEGORIES = {
             "All modules", "Visual", "Blatant", "Streaming", "Favorites"
@@ -99,11 +101,11 @@ public class DonutScreen extends Screen {
     }
 
     private void text(GuiGraphics g, String value, int x, int y, int color) {
-        g.drawString(font, value, x, y, color, false);
+        g.drawString(font, uiText(value), x, y, color, false);
     }
 
     private void centered(GuiGraphics g, String value, int x, int y, int color) {
-        text(g, value, x - font.width(value) / 2, y, color);
+        text(g, value, x - uiWidth(value) / 2, y, color);
     }
 
     private int mix(int a, int b, float t) {
@@ -126,9 +128,9 @@ public class DonutScreen extends Screen {
         float value = switchAnimations.compute(id, (key, old) ->
                 old == null ? target : old + (target - old) * 0.34f);
         int track = mix(0xFF51483F, 0xFF9CCB67, value);
-        fill(g, x, y, 21, 12, track);
+        roundRect(g, x, y, 21, 12, 6, track);
         int knobX = x + 2 + Math.round(9 * value);
-        fill(g, knobX, y + 2, 8, 8, 0xFFF7F7F3);
+        roundRect(g, knobX, y + 2, 8, 8, 4, 0xFFF7F7F3);
     }
 
     private List<Module> visibleModules() {
@@ -158,7 +160,7 @@ public class DonutScreen extends Screen {
     }
 
     private void drawHeader(GuiGraphics g, int x, int y, int w) {
-        fill(g, x, y, w, 48, PANEL_DARK);
+        roundRect(g, x, y, w, 48, 10, PANEL_DARK);
         donutMark(g, x + 13, y + 14);
         text(g, "DONUT", x + 37, y + 12, 0xFFD6EAF1);
         text(g, "MODULE CONTROL", x + 37, y + 25, MUTED);
@@ -222,7 +224,7 @@ public class DonutScreen extends Screen {
         donutMark(g, x + w - 56, y + 15);
 
         int searchY = y + 80;
-        fill(g, x, searchY, w, 27, 0xFF252930);
+        roundRect(g, x, searchY, w, 27, 7, 0xFF252D3D);
         border(g, x, searchY, w, 27, searchFocused ? LIME : BORDER);
         text(g, "⌕", x + 10, searchY + 8, MUTED);
         text(g, search.isEmpty() ? "Search modules..." : search,
@@ -251,8 +253,12 @@ public class DonutScreen extends Screen {
             boolean hover = mouseX >= cx && mouseX <= cx + colW
                     && mouseY >= cy && mouseY <= cy + cardH;
             boolean active = module == selected;
-            fill(g, cx, cy, colW, cardH, active ? 0xFF30332C : hover ? CARD_HOVER : CARD);
-            border(g, cx, cy, colW, cardH, active ? 0xFF9BAE69 : BORDER);
+            float hoverValue = hoverAnimations.compute(module.getName(), (key, old) ->
+                    old == null ? (hover ? 1f : 0f) : old + ((hover ? 1f : 0f) - old) * 0.22f);
+            int cardColor = mix(CARD, CARD_HOVER, hoverValue);
+            if (active) cardColor = mix(cardColor, 0xFF34432E, 0.65f);
+            roundRect(g, cx, cy, colW, cardH, 7, cardColor);
+            border(g, cx, cy, colW, cardH, active ? LIME : BORDER);
             if (active) fill(g, cx + 1, cy + 5, 2, cardH - 10, LIME);
             text(g, module.getName(), cx + 9, cy + 10, WHITE);
             text(g, module.isEnabled() ? "ACTIVE" : "INACTIVE",
@@ -341,7 +347,7 @@ public class DonutScreen extends Screen {
         fill(g, x + 10, configY, w - 20, 1, BORDER);
         text(g, "CONFIGURATION", x + 12, configY + 13, MUTED);
         text(g, "Keybind", x + 12, configY + 34, WHITE);
-        fill(g, x + 12, configY + 48, w - 24, 23, 0xFF292D33);
+        roundRect(g, x + 12, configY + 48, w - 24, 23, 6, 0xFF30394C);
         text(g, "None", x + 20, configY + 55, MUTED);
         text(g, "Favorite", x + 12, y + h - 20, WHITE);
         drawSwitch(g, x + w - 34, y + h - 23, selected.isFavorite(), "settings.favorite");
