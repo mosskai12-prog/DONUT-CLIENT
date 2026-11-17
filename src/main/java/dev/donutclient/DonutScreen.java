@@ -23,6 +23,8 @@ public class DonutScreen extends Screen {
     private boolean searchFocused;
     private boolean enabledOnly;
     private float open = 0f;
+    private float selectionTransition = 0f;
+    private String lastSelectedName = "";
     private boolean dragging;
     private double dragOffsetX;
     private double dragOffsetY;
@@ -289,7 +291,7 @@ public class DonutScreen extends Screen {
             float hoverValue = hoverAnimations.compute(module.getName(), (key, old) ->
                     old == null ? (hover ? 1f : 0f) : old + ((hover ? 1f : 0f) - old) * 0.22f);
             int cardColor = mix(CARD, CARD_HOVER, hoverValue);
-            if (active) cardColor = mix(cardColor, 0xFF34432E, 0.65f);
+            if (active) cardColor = mix(cardColor, 0xFF34432E, 0.45f + 0.20f * selectionTransition);
             roundRect(g, cx, cy, colW, cardH, 7, cardColor);
             border(g, cx, cy, colW, cardH, active ? LIME : BORDER);
             if (active) fill(g, cx + 1, cy + 5, 2, cardH - 10, LIME);
@@ -448,9 +450,17 @@ public class DonutScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float delta) {
-        open = Math.min(1f, open + delta * 4f);
+        float frame = Math.max(0.01f, Math.min(1f, delta * 60f));
+        open += (1f - open) * (1f - (float) Math.pow(0.72f, frame));
+        if (open > 0.999f) open = 1f;
+        String selectedName = selected == null ? "" : selected.getName();
+        if (!selectedName.equals(lastSelectedName)) {
+            lastSelectedName = selectedName;
+            selectionTransition = 0f;
+        }
+        selectionTransition += (1f - selectionTransition) * (1f - (float) Math.pow(0.65f, frame));
         int x = left();
-        int y = top() + Math.round((1f - open) * 10f);
+        int y = top() + Math.round((1f - open) * 18f);
         int w = panelWidth();
         int h = panelHeight();
 

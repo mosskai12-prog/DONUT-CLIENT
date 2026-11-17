@@ -156,11 +156,11 @@ public final class ModuleFeatures {
         matrices.translate(-camera.x, -camera.y, -camera.z);
 
         if (blockOn) {
-            int opacity = ModuleConfig.getInt("BlockESP", "opacity", 210);
-            float alpha = Math.max(0.15f, Math.min(1.0f, opacity / 255.0f));
+            int opacity = Math.max(0, Math.min(255, ModuleConfig.getInt("BlockESP", "opacity", 210)));
+            int color = (opacity << 24) | 0x00FFD13B;
             for (BlockPos pos : blockTargets) {
-                AABB box = new AABB(pos).inflate(0.002);
-                ShapeRenderer.renderShape(matrices, lines, client.level.getBlockState(pos).getShape(client.level, pos), pos.getX(), pos.getY(), pos.getZ(), (Math.max(0, Math.min(255, opacity)) << 24) | 0x00FFD13B, 1.5f);
+                ShapeRenderer.renderShape(matrices, lines, client.level.getBlockState(pos).getShape(client.level, pos),
+                        pos.getX(), pos.getY(), pos.getZ(), color, 1.5f);
             }
         }
         if (storageOn) {
@@ -172,10 +172,31 @@ public final class ModuleFeatures {
         matrices.popPose();
     }
 
+    private static void renderModuleList(GuiGraphics graphics, Minecraft client) {
+        if (!ModuleConfig.getBoolean("Module List", "enabled", true)) return;
+        List<String> active = new ArrayList<>();
+        for (String name : new String[]{"Amethyst Bypass", "Sus Chunk Finder", "Fullbright",
+                "BlockESP", "Storage ESP", "Toggle Sprint", "Coordinates HUD", "FPS Counter",
+                "Direction HUD", "Armor HUD", "Progress Bar", "Light Debug"}) {
+            if (ModuleConfig.isEnabled(name)) active.add(name);
+        }
+        int y = 8;
+        int right = client.getWindow().getGuiScaledWidth() - 8;
+        for (String name : active) {
+            int textWidth = client.font.width(name);
+            int x = right - textWidth - 8;
+            graphics.fill(x - 3, y - 2, right, y + 11, 0x990D1119);
+            graphics.fill(right - 2, y - 2, right, y + 11, 0xFF9CFB65);
+            graphics.drawString(client.font, name, right - textWidth - 6, y, 0xFFF4F5F7, true);
+            y += 15;
+        }
+    }
+
     private static void renderHud(GuiGraphics graphics, DeltaTracker tickCounter) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null || client.options.hideGui) return;
         int y = 8;
+        renderModuleList(graphics, client);
         if (ModuleConfig.isEnabled("Coordinates HUD")) {
             String coordinates = String.format("XYZ  %d  %d  %d",
                     client.player.blockPosition().getX(),
