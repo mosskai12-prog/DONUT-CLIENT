@@ -11,12 +11,12 @@ base {
 }
 
 repositories {
-    maven { url = "https://maven.axolotlclient.com" }
+    maven { url = "https://api.modrinth.com/maven" }
 }
 
 dependencies {
     // Anti-aliased GUI shapes and vector/font rendering for the Fizzy ClickGUI.
-    modImplementation include("io.github.axolotlclient.rendering:AxolotlClient-rendering:0.0.7+1.21.11")
+    modImplementation include("maven.modrinth:2qX7WO3l:jwYTLJ4T")
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings loom.officialMojangMappings()
 

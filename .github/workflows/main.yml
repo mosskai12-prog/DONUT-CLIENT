@@ -25,7 +25,7 @@ jobs:
       - name: Resolve and inspect AxolotlClient rendering API
         run: |
           gradle dependencies --configuration modCompileClasspath
-          AXO=$(find ~/.gradle/caches -type f -iname "*AxolotlClient-rendering*.jar" | head -n 1)
+          AXO=$(find ~/.gradle/caches -type f -iname "*2qX7WO3l*.jar" | head -n 1)
           echo "Axolotl rendering jar: $AXO"
           if [ -n "$AXO" ]; then
             jar tf "$AXO" | grep -E "GuiGraphicsExtension|\.class$" | head -80
