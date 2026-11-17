@@ -4,6 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
@@ -107,7 +108,7 @@ public class DonutScreen extends Screen {
 
     private Component uiText(String value) {
         return Component.literal(value).withStyle(style ->
-                style.withFont(Identifier.withDefaultNamespace("uniform")));
+                style.withFont(new FontDescription.Resource(Identifier.withDefaultNamespace("uniform"))));
     }
 
     private int uiWidth(String value) {
