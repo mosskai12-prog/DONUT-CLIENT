@@ -23,6 +23,9 @@ public class DonutScreen extends Screen {
     private boolean searchFocused;
     private boolean enabledOnly;
     private int moduleScroll;
+    private final Map<String, Integer> columnScroll = new HashMap<>();
+    private int accentColor = 0xFFCE83F5;
+    private int themeIndex = 0;
     private float open = 0f;
     private float selectionTransition = 0f;
     private String lastSelectedName = "";
@@ -47,29 +50,28 @@ public class DonutScreen extends Screen {
     private static final int GREEN = 0xFF9CFB65;
     private static final int PINK = 0xFFFF79C6;
 
-    private static final String[] CATEGORIES = {
-            "All modules", "Visual", "Blatant", "Streaming", "Favorites"
-    };
+    private static final String[] CATEGORIES = {"Combat", "Movement", "Render", "Player", "Misc"};
 
     public DonutScreen() {
         super(Component.literal("Fizzy Client"));
-        modules.add(new Module("Base Finder", "Visual", "Finds configured base markers."));
-        modules.add(new Module("Sus Chunk Finder", "Visual", "Shows nearby loaded machine blocks as clues, not proof of a base."));
-        modules.add(new Module("Fullbright", "Visual", "Makes dark areas easier to see."));
-        modules.add(new Module("Fly", "Blatant", "Flight controls. Requires a supported game mode."));
-        modules.add(new Module("Progress Bar", "Visual", "Displays progress information."));
-        modules.add(new Module("Name Hider", "Streaming", "Hides player names in supported HUD contexts."));
-        modules.add(new Module("Hotbar", "Visual", "Displays a configurable hotbar overlay."));
-        modules.add(new Module("Amethyst Scanner", "Visual", "Displays amethyst-related information."));
-        modules.add(new Module("Light Debug", "Visual", "Displays lighting debug information."));
-        modules.add(new Module("Sound Detector", "Visual", "Displays sound event indicators."));
-        modules.add(new Module("BlockESP", "Visual", "Highlights the block types you select."));
-        modules.add(new Module("Storage ESP", "Visual", "Highlights chests, barrels, ender chests and shulker boxes."));
-        modules.add(new Module("Coordinates HUD", "Visual", "Displays your current XYZ coordinates."));
-        modules.add(new Module("FPS Counter", "Visual", "Displays your current frame rate."));
-        modules.add(new Module("Direction HUD", "Visual", "Shows which compass direction you are facing."));
-        modules.add(new Module("Armor HUD", "Visual", "Shows the remaining durability of your equipped armor."));
-        modules.add(new Module("Toggle Sprint", "Blatant", "Automatically sprints while moving."));
+        modules.add(new Module("Base Finder", "Misc", "Finds configured base markers."));
+        modules.add(new Module("Sus Chunk Finder", "Render", "Shows nearby loaded machine blocks as clues, not proof of a base."));
+        modules.add(new Module("Fullbright", "Render", "Makes dark areas easier to see."));
+        modules.add(new Module("Fly", "Movement", "Flight controls. Requires a supported game mode."));
+        modules.add(new Module("Progress Bar", "Misc", "Displays progress information."));
+        modules.add(new Module("Name Hider", "Player", "Hides player names in supported HUD contexts."));
+        modules.add(new Module("Hotbar", "Player", "Displays a configurable hotbar overlay."));
+        modules.add(new Module("Amethyst Scanner", "Render", "Displays amethyst-related information."));
+        modules.add(new Module("Light Debug", "Render", "Displays lighting debug information."));
+        modules.add(new Module("Sound Detector", "Misc", "Displays sound event indicators."));
+        modules.add(new Module("BlockESP", "Render", "Highlights the block types you select."));
+        modules.add(new Module("Storage ESP", "Render", "Highlights chests, barrels, ender chests and shulker boxes."));
+        modules.add(new Module("Coordinates HUD", "Player", "Displays your current XYZ coordinates."));
+        modules.add(new Module("FPS Counter", "Player", "Displays your current frame rate."));
+        modules.add(new Module("Direction HUD", "Player", "Shows which compass direction you are facing."));
+        modules.add(new Module("Armor HUD", "Player", "Shows the remaining durability of your equipped armor."));
+        modules.add(new Module("Toggle Sprint", "Movement", "Automatically sprints while moving."));
+        modules.add(new Module("Freecam", "Movement", "Detaches the camera from your player for remote inspection."));
         selected = findModule("BlockESP");
     }
 
@@ -435,203 +437,174 @@ public class DonutScreen extends Screen {
         text(g, "Native game font for a consistent feel.", x + 14, y + 213, MUTED);
     }
 
-        @Override
+    
+    @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float delta) {
         float frame = Math.max(0.01f, Math.min(1f, delta * 60f));
-        open += (1f - open) * (1f - (float) Math.pow(0.72f, frame));
+        open += (1f - open) * (1f - (float) Math.pow(0.76f, frame));
         if (open > 0.999f) open = 1f;
-        String selectedName = selected == null ? "" : selected.getName();
-        if (!selectedName.equals(lastSelectedName)) {
-            lastSelectedName = selectedName;
-            selectionTransition = 0f;
+
+        int colGap = 10;
+        int colWidth = Math.min(166, (width - 70 - colGap * 4) / 5);
+        int totalWidth = colWidth * 5 + colGap * 4;
+        int startX = (width - totalWidth) / 2;
+        int colY = Math.max(28, (height - 340) / 2);
+        int colHeight = Math.min(350, height - colY - 24);
+        int slide = Math.round((1f - open) * 16f);
+        int[] accents = {0xFFE78BC8, 0xFFC68AF3, accentColor, 0xFFCE9BFF, 0xFFB68CEB};
+
+        for (int c = 0; c < CATEGORIES.length; c++) {
+            String cat = CATEGORIES[c];
+            int x = startX + c * (colWidth + colGap);
+            int y = colY + slide;
+            fill(g, x - 2, y - 2, colWidth + 4, colHeight + 4, 0x33000000);
+            fill(g, x, y, colWidth, colHeight, 0xE9121019);
+            border(g, x, y, colWidth, colHeight, 0x665E5268);
+            fill(g, x, y, colWidth, 27, 0xF21A1522);
+            String icon = switch (cat) {
+                case "Combat" -> "⚔";
+                case "Movement" -> "✥";
+                case "Render" -> "◈";
+                case "Player" -> "♟";
+                default -> "⚙";
+            };
+            centered(g, icon + " " + cat, x + colWidth / 2, y + 9, accents[c]);
+
+            List<Module> entries = modules.stream().filter(m -> m.getCategory().equals(cat)).toList();
+            int rowY = y + 34;
+            int scroll = columnScroll.getOrDefault(cat, 0);
+            int rowHeight = 27;
+            int available = colHeight - 44;
+            int rows = Math.max(1, available / rowHeight);
+            if (scroll > Math.max(0, entries.size() - rows)) {
+                scroll = Math.max(0, entries.size() - rows);
+                columnScroll.put(cat, scroll);
+            }
+            for (int n = 0; n < rows; n++) {
+                int index = scroll + n;
+                if (index >= entries.size()) break;
+                Module module = entries.get(index);
+                int ry = rowY + n * rowHeight;
+                boolean hover = mouseX >= x + 3 && mouseX <= x + colWidth - 3
+                        && mouseY >= ry && mouseY <= ry + rowHeight - 2;
+                boolean selectedRow = selected == module;
+                float hv = hoverAnimations.compute(module.getName(), (k, old) ->
+                        old == null ? (hover ? 1f : 0f) : old + ((hover ? 1f : 0f) - old) * 0.28f);
+                if (hover || selectedRow) fill(g, x + 3, ry, colWidth - 6, rowHeight - 2,
+                        mix(0x001F1928, 0xAA493452, Math.max(hv, selectedRow ? 0.8f : 0f)));
+                String label = module.getName();
+                int textColor = module.isEnabled() ? accents[c] : (hover ? WHITE : 0xFFB7AFBE);
+                if (font.width(label) > colWidth - 35) {
+                    while (label.length() > 3 && font.width(label + "...") > colWidth - 35)
+                        label = label.substring(0, label.length() - 1);
+                    label += "...";
+                }
+                text(g, label, x + 10, ry + 8, textColor);
+                int dotColor = !isImplemented(module) ? 0xFF665F6C
+                        : module.isEnabled() ? accents[c] : 0xFF514958;
+                fill(g, x + colWidth - 15, ry + 10, 5, 5, dotColor);
+                if (selectedRow) {
+                    fill(g, x + 5, ry + rowHeight - 3, colWidth - 10, 1, accents[c]);
+                    String detail = module.getDescription();
+                    if (detail.length() > 45) detail = detail.substring(0, 42) + "...";
+                    text(g, detail, x + 9, ry + 17, 0xFFAAA0B0);
+                }
+            }
+            if (entries.isEmpty()) centered(g, "No modules yet", x + colWidth / 2, rowY + 10, DIM);
+            if (entries.size() > rows) {
+                String hint = "SCROLL  " + (scroll + 1) + "/" + entries.size();
+                centered(g, hint, x + colWidth / 2, y + colHeight - 15, 0xFF887C91);
+            }
         }
-        selectionTransition += (1f - selectionTransition) * (1f - (float) Math.pow(0.65f, frame));
-        int x = left();
-        int y = top() + Math.round((1f - open) * 18f);
-        int w = panelWidth();
-        int h = panelHeight();
 
-        // Keep the Minecraft world visible; only draw a subtle shadow behind the compact window.
-        fill(g, x - 3, y - 3, w + 6, h + 6, 0x66000000);
-        fill(g, x, y, w, h, OUTER);
-        border(g, x, y, w, h, 0xFF555B65);
-        drawHeader(g, x, y, w);
-
-        int contentY = y + 58;
-        int contentH = h - 82;
-        drawSidebar(g, x, contentY, contentH, mouseX, mouseY);
-
-        int mx = mainLeft();
-        int my = bodyTop();
-        int mw = mainWidth();
-        if (page.equals("Modules")) {
-            drawWorkspace(g, mx, my, mw, mouseX, mouseY);
-            drawModuleSettings(g, settingsLeft(), my, settingsWidth(), bodyBottom() - my);
-        } else if (page.equals("HUD")) {
-            drawHudPage(g, mx, my, mw, bodyBottom() - my);
-            drawModuleSettings(g, settingsLeft(), my, settingsWidth(), bodyBottom() - my);
-        } else {
-            drawAppearancePage(g, mx, my, mw, bodyBottom() - my);
-            drawModuleSettings(g, settingsLeft(), my, settingsWidth(), bodyBottom() - my);
+        // Small theme picker, positioned like the reference client.
+        int themeW = 142, themeH = 82;
+        int tx = width - themeW - 8, ty = height - themeH - 8;
+        fill(g, tx - 2, ty - 2, themeW + 4, themeH + 4, 0x33000000);
+        fill(g, tx, ty, themeW, themeH, 0xE914111B);
+        border(g, tx, ty, themeW, themeH, 0x775E5268);
+        text(g, "•  THEMES", tx + 9, ty + 8, WHITE);
+        int[] swatches = {0xFFE78BC8, 0xFFC68AF3, 0xFF8F9BFF, 0xFF75D6C4};
+        String[] names = {"Pink", "Purple", "Blue", "Mint"};
+        for (int i = 0; i < swatches.length; i++) {
+            int sy = ty + 25 + i * 13;
+            fill(g, tx + 10, sy, 8, 8, swatches[i]);
+            text(g, names[i], tx + 24, sy, themeIndex == i ? WHITE : MUTED);
+            if (themeIndex == i) fill(g, tx + themeW - 12, sy + 2, 3, 3, swatches[i]);
         }
 
-        fill(g, x, y + h - 23, w, 23, PANEL_DARK);
-        fill(g, x, y + h - 24, w, 1, BORDER);
-        text(g, "FIZZY CLIENT  /  YOUR WORKSPACE", x + 14, y + h - 15, MUTED);
-        long enabled = modules.stream().filter(Module::isEnabled).count();
-        String count = enabled + " modules active";
-        text(g, count, x + w - font.width(count) - 14, y + h - 15, MUTED);
         super.render(g, mouseX, mouseY, delta);
     }
 
+    
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() != 0) return super.mouseClicked(event, doubleClick);
-        double mx = event.x();
-        double my = event.y();
-        int x = left();
-        int y = top() + Math.round((1f - open) * 18f);
-        int w = panelWidth();
-        int h = panelHeight();
+        int mx = (int) event.x(), my = (int) event.y();
 
-        // Drag the window using its title bar, away from the tab buttons.
-        if (mx >= x + 150 && mx <= x + w - 300 && my >= y + 2 && my <= y + 55) {
-            dragging = true;
-            dragOffsetX = mx - x;
-            dragOffsetY = my - y;
+        int colGap = 10;
+        int colWidth = Math.min(166, (width - 70 - colGap * 4) / 5);
+        int totalWidth = colWidth * 5 + colGap * 4;
+        int startX = (width - totalWidth) / 2;
+        int colY = Math.max(28, (height - 340) / 2);
+        int colHeight = Math.min(350, height - colY - 24);
+
+        int themeW = 142, themeH = 82;
+        int tx = width - themeW - 8, ty = height - themeH - 8;
+        if (mx >= tx && mx <= tx + themeW && my >= ty + 22 && my <= ty + themeH) {
+            int index = Math.max(0, Math.min(3, (my - (ty + 25)) / 13));
+            themeIndex = index;
+            accentColor = new int[]{0xFFE78BC8, 0xFFC68AF3, 0xFF8F9BFF, 0xFF75D6C4}[index];
             return true;
         }
 
-        String[] tabs = {"Modules", "HUD", "Appearance"};
-        int tabRight = x + w - 18;
-        for (int i = tabs.length - 1; i >= 0; i--) {
-            int tw = font.width(tabs[i]) + 22;
-            int tx = tabRight - tw;
-            if (mx >= tx && mx <= tx + tw && my >= y + 10 && my <= y + 38) {
-                page = tabs[i];
-                searchFocused = false;
-                return true;
+        for (int c = 0; c < CATEGORIES.length; c++) {
+            String cat = CATEGORIES[c];
+            int x = startX + c * (colWidth + colGap);
+            if (mx < x || mx > x + colWidth || my < colY || my > colY + colHeight) continue;
+            List<Module> entries = modules.stream().filter(m -> m.getCategory().equals(cat)).toList();
+            int rowY = colY + 34;
+            int scroll = columnScroll.getOrDefault(cat, 0);
+            int rows = Math.max(1, (colHeight - 44) / 27);
+            for (int n = 0; n < rows; n++) {
+                int index = scroll + n;
+                if (index >= entries.size()) break;
+                int ry = rowY + n * 27;
+                if (my >= ry && my <= ry + 25) {
+                    Module module = entries.get(index);
+                    selected = selected == module ? null : module;
+                    if (isImplemented(module)) module.toggle();
+                    return true;
+                }
             }
-            tabRight = tx - 8;
-        }
-
-        int sideY = y + 48;
-        int yy = sideY + 29;
-        for (String item : CATEGORIES) {
-            if (mx >= x + 7 && mx <= x + sideWidth() - 8 && my >= yy && my <= yy + 25) {
-                category = item;
-                moduleScroll = 0;
-                selected = null;
-                page = "Modules";
-                return true;
-            }
-            yy += 29;
-        }
-        if (mx >= x + 7 && mx <= x + sideWidth() - 8 && my >= sideY + bodyBottom() - top() - 24) {
-            enabledOnly = !enabledOnly;
             return true;
-        }
-
-        int mx0 = mainLeft();
-        int my0 = bodyTop();
-        int mw = mainWidth();
-        if (page.equals("Modules")) {
-            int searchY = my0 + 61;
-            if (mx >= mx0 && mx <= mx0 + mw && my >= searchY && my <= searchY + 32) {
-                searchFocused = true;
-                return true;
-            }
-            searchFocused = false;
-
-            List<Module> visible = visibleModules();
-            int listY = searchY + 43;
-            int rowH = 55;
-            int gap = 7;
-            int rows = Math.max(1, (bodyBottom() - listY - 2) / (rowH + gap));
-            for (int row = 0; row < rows; row++) {
-                int index = moduleScroll + row;
-                if (index >= visible.size()) break;
-                int cy = listY + row * (rowH + gap);
-                Module module = visible.get(index);
-                if (mx >= mx0 && mx <= mx0 + mw && my >= cy && my <= cy + rowH) {
-                    selected = module;
-                    if (isImplemented(module) && mx >= mx0 + mw - 49) module.toggle();
-                    return true;
-                }
-            }
-        } else {
-            searchFocused = false;
-            if (page.equals("HUD")) {
-                if (my >= my0 + 64 && my <= my0 + 103) {
-                    Module module = findModule("Coordinates HUD");
-                    if (module != null) module.toggle();
-                    return true;
-                }
-                if (my >= my0 + 112 && my <= my0 + 151) {
-                    Module module = findModule("FPS Counter");
-                    if (module != null) module.toggle();
-                    return true;
-                }
-            }
-        }
-
-        if (page.equals("Modules") && selected != null) {
-            int sx = settingsLeft();
-            int sy = my0;
-            int sw = settingsWidth();
-            int sh = bodyBottom() - my0;
-            if (!selected.getName().equals("BlockESP") && !selected.getName().equals("Storage ESP")
-                    && mx >= sx && mx <= sx + sw && my >= sy + sh - 31 && my <= sy + sh) {
-                selected.toggleFavorite();
-                return true;
-            }
-            if (selected.getName().equals("BlockESP")) {
-                int desc = sy + 78 + wrap(selected.getDescription(), sw - 24).size() * 12;
-                int optionY = desc + 8 + 13 + 18;
-                for (String name : BlockSelection.names()) {
-                    if (my >= optionY - 5 && my <= optionY + 10 && mx >= sx + 8 && mx <= sx + sw - 8) {
-                        BlockSelection.setSelected(name, !BlockSelection.isSelected(name));
-                        return true;
-                    }
-                    optionY += 17;
-                }
-            }
-            String[] settings = settingsFor(selected);
-            int descY = sy + 78 + wrap(selected.getDescription(), sw - 24).size() * 12;
-            int lineY = descY + 8;
-            int yySettings = lineY + 13;
-            if (selected.getName().equals("BlockESP")) yySettings += 42;
-            if (selected.getName().equals("Fullbright")) yySettings += 48;
-            for (String option : settings) {
-                if (mx >= sx + sw - 45 && mx <= sx + sw - 8
-                        && my >= yySettings - 2 && my <= yySettings + 20) {
-                    String key = settingKey(option);
-                    boolean value = ModuleConfig.getBoolean(selected.getName(), key, true);
-                    ModuleConfig.setBoolean(selected.getName(), key, !value);
-                    return true;
-                }
-                yySettings += 31;
-            }
         }
         return super.mouseClicked(event, doubleClick);
     }
 
+    
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        int mx = mainLeft();
-        int my = bodyTop();
-        if (page.equals("Modules") && mouseX >= mx && mouseX <= mx + mainWidth()
-                && mouseY >= my + 100 && mouseY <= bodyBottom()) {
-            int count = visibleModules().size();
-            int rows = Math.max(1, (bodyBottom() - (my + 104) - 2) / 62);
-            moduleScroll = Math.max(0, Math.min(Math.max(0, count - rows),
-                    moduleScroll - (int) Math.signum(verticalAmount)));
+        int colGap = 10;
+        int colWidth = Math.min(166, (width - 70 - colGap * 4) / 5);
+        int totalWidth = colWidth * 5 + colGap * 4;
+        int startX = (width - totalWidth) / 2;
+        int colY = Math.max(28, (height - 340) / 2);
+        int colHeight = Math.min(350, height - colY - 24);
+        for (int c = 0; c < CATEGORIES.length; c++) {
+            String cat = CATEGORIES[c];
+            int x = startX + c * (colWidth + colGap);
+            if (mouseX < x || mouseX > x + colWidth || mouseY < colY || mouseY > colY + colHeight) continue;
+            int count = (int) modules.stream().filter(m -> m.getCategory().equals(cat)).count();
+            int rows = Math.max(1, (colHeight - 44) / 27);
+            int next = columnScroll.getOrDefault(cat, 0) - (int) Math.signum(verticalAmount);
+            columnScroll.put(cat, Math.max(0, Math.min(Math.max(0, count - rows), next)));
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
-    @Override
+        @Override
     public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dragX, double dragY) {
         if (dragging) {
             windowX = (int) (event.x() - dragOffsetX);
